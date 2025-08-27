@@ -42,6 +42,12 @@ async def health() -> Dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/", response_class=HTMLResponse, tags=["ui"])
+async def super_view(request: Request, record_id: str = "a0N123456789012"):
+    """Serve the super view dashboard for all services"""
+    return templates.TemplateResponse("super_view.html", {"request": request, "record_id": record_id})
+
+
 @app.get("/workflow", response_class=HTMLResponse, tags=["ui"])
 async def workflow_ui(request: Request, record_id: str = "a0N123456789012"):
     """Serve the workflow UI page"""

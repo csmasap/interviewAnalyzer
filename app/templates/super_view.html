@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview Analyzer - Super View</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .record-info {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            text-align: center;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .record-id {
+            font-family: monospace;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin: 10px 0;
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .service-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .service-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+        }
+
+        .service-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .service-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .service-description {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 5px;
+            border: none;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #495057;
+            border: 2px solid #e9ecef;
+        }
+
+        .btn-secondary:hover {
+            background: #e9ecef;
+            transform: translateY(-2px);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            color: white;
+        }
+
+        .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-active {
+            background: #28a745;
+        }
+
+        .status-pending {
+            background: #ffc107;
+        }
+
+        .status-inactive {
+            background: #6c757d;
+        }
+
+        .footer {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            margin-top: 40px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Interview Analyzer</h1>
+            <p>Your comprehensive career analysis and interview preparation platform</p>
+        </div>
+
+        <div class="record-info">
+            <h3>Salesforce Record ID</h3>
+            <div class="record-id">{{ record_id }}</div>
+            <p>All services will use this record for analysis and processing</p>
+        </div>
+
+        <div class="services-grid">
+            <!-- Workflow Service -->
+            <div class="service-card">
+                <span class="service-icon">🔄</span>
+                <h3 class="service-title">Career Workflow</h3>
+                <p class="service-description">
+                    Complete career analysis workflow including opportunity analysis, 
+                    career path guidance, and job recommendations. Execute step-by-step 
+                    or all at once.
+                </p>
+                                 <div>
+                     <a href="/workflow?record_id={{ record_id }}" class="btn btn-primary">
+                         📋 Step-by-Step Workflow
+                     </a>
+                 </div>
+            </div>
+
+            <!-- Interview Service -->
+            <div class="service-card">
+                <span class="service-icon">🎤</span>
+                <h3 class="service-title">AI Interview</h3>
+                <p class="service-description">
+                    Conduct an AI-powered interview with yes/no questions and 
+                    open-ended responses. Get personalized questions based on 
+                    the opportunity discussed.
+                </p>
+                                 <div>
+                     <a href="/interview?record_id={{ record_id }}" class="btn btn-primary">
+                         📝 Interview Interface
+                     </a>
+                 </div>
+            </div>
+
+            <!-- Job Analyzer Service -->
+            <div class="service-card">
+                <span class="service-icon">💼</span>
+                <h3 class="service-title">Job Analyzer</h3>
+                <p class="service-description">
+                    Generate targeted interview questions based on job descriptions. 
+                    Perfect for preparing candidates for specific roles.
+                </p>
+                                 <div>
+                     <a href="/job-analyzer?record_id={{ record_id }}" class="btn btn-primary">
+                         📊 Job Analyzer Interface
+                     </a>
+                 </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>Powered by FastAPI & OpenAI | Salesforce Integration Ready</p>
+        </div>
+    </div>
+
+    <script>
+        const recordId = '{{ record_id }}';
+        const apiBase = '/api/v1';
+
+
+
+
+
+        // Add some interactive features
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add loading states to buttons
+            const buttons = document.querySelectorAll('.btn');
+            buttons.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (this.textContent.includes('Execute') || this.textContent.includes('Start')) {
+                        this.style.opacity = '0.7';
+                        this.style.pointerEvents = 'none';
+                        setTimeout(() => {
+                            this.style.opacity = '1';
+                            this.style.pointerEvents = 'auto';
+                        }, 2000);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
