@@ -1,0 +1,3 @@
+# Exclude large/irrelevant subprojects from this repo
+/interview-analyzer-rust/
+/interview-analyzer-split/
