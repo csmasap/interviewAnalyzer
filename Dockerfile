@@ -1,21 +1,23 @@
-# Use an official Python runtime as a parent image
-FROM python:3.13-slim
+# Use a stable Python runtime
+FROM python:3.11-slim
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Install system dependencies (the C compiler)
-# This is the step that was failing before
-RUN apt-get update && apt-get install -y build-essential && rm -rf /var/lib/apt/lists/*
+# Install system dependencies (C compiler and common libs)
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends build-essential \
+    && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
 COPY requirements.txt .
 
-# Install any needed packages specified in requirements.txt
-RUN pip install --no-cache-dir -r requirements.txt
+# Ensure latest pip/setuptools/wheel are available, then install dependencies
+RUN pip install --upgrade pip setuptools wheel \
+    && pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of your application code into the container
 COPY . .
 
-# Command to run your application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "10000"]
+# Command to run your application (use Render's PORT if available)
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-10000}"]
