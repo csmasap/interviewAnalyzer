@@ -3,7 +3,7 @@ services:
     name: interview-analyzer
     env: python
     region: oregon
-    branch: main
+    branch: master
     rootDir: .
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
