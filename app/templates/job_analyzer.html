@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Description Analyzer - Interview Analyzer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .input-section {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .input-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+        
+        .textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .questions-container {
+            margin-top: 30px;
+        }
+        
+        .questions-title {
+            font-size: 1.5rem;
+            color: #1e293b;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .question-card {
+            background: #f0fdf4;
+            border: 2px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+        
+        .question-card:hover {
+            border-color: #16a34a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .question-number {
+            font-weight: 600;
+            color: #166534;
+            margin-bottom: 8px;
+            font-size: 1.1rem;
+        }
+        
+        .question-text {
+            color: #15803d;
+            line-height: 1.6;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            color: #dc2626;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .back-link {
+            display: inline-block;
+            color: #4f46e5;
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+        
+        .back-link:hover {
+            color: #7c3aed;
+        }
+        
+        .sample-section {
+            background: #fff7ed;
+            border: 2px solid #fed7aa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .sample-title {
+            color: #c2410c;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .sample-text {
+            color: #9a3412;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Job Description Analyzer</h1>
+            <p>Generate targeted interview questions from job descriptions</p>
+        </div>
+        
+        <div class="content">
+            <a href="/workflow" class="back-link">← Back to Career Workflow</a>
+            
+            <!-- Step 1: Input -->
+            <div id="step-input" class="step active">
+                <div class="sample-section">
+                    <div class="sample-title">💡 How it works</div>
+                    <div class="sample-text">
+                        Paste a job description below and our AI will analyze it to generate 3 targeted, open-ended interview questions that help assess candidates for this specific role.
+                    </div>
+                </div>
+                
+                <div class="input-section">
+                    <div class="input-title">📝 Job Description</div>
+                    <textarea 
+                        id="job-description-input" 
+                        class="textarea" 
+                        placeholder="Paste the complete job description here...
+
+Example:
+Senior Software Engineer - Full Stack
+
+We are looking for an experienced Senior Software Engineer to join our growing team. You will be responsible for designing and implementing scalable web applications using modern technologies.
+
+Requirements:
+- 5+ years of software development experience
+- Proficiency in Python, JavaScript, and React
+- Experience with cloud platforms (AWS, Azure)
+- Strong understanding of database design and optimization
+- Excellent communication and teamwork skills..."
+                    ></textarea>
+                    <button id="analyze-btn" class="btn">Generate Interview Questions</button>
+                </div>
+            </div>
+            
+            <!-- Step 2: Loading -->
+            <div id="step-loading" class="step">
+                <div class="loading">
+                    Analyzing job description and generating questions...
+                </div>
+            </div>
+            
+            <!-- Step 3: Results -->
+            <div id="step-results" class="step">
+                <div class="questions-container">
+                    <div class="questions-title">❓ Generated Interview Questions</div>
+                    <div id="questions-list"></div>
+                </div>
+                
+                <button id="new-analysis-btn" class="btn" style="margin-top: 20px;">
+                    Analyze Another Job Description
+                </button>
+            </div>
+            
+            <!-- Error state -->
+            <div id="step-error" class="step">
+                <div class="error">
+                    <strong>⚠️ Error:</strong> <span id="error-message"></span>
+                </div>
+                <button id="retry-btn" class="btn">Try Again</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class JobAnalyzer {
+            constructor() {
+                this.init();
+            }
+            
+            init() {
+                document.getElementById('analyze-btn').addEventListener('click', () => {
+                    this.analyzeJobDescription();
+                });
+                
+                document.getElementById('new-analysis-btn').addEventListener('click', () => {
+                    this.resetForm();
+                });
+                
+                document.getElementById('retry-btn').addEventListener('click', () => {
+                    this.showStep('step-input');
+                });
+            }
+            
+            showStep(stepId) {
+                document.querySelectorAll('.step').forEach(step => {
+                    step.classList.remove('active');
+                });
+                document.getElementById(stepId).classList.add('active');
+            }
+            
+            showError(message) {
+                document.getElementById('error-message').textContent = message;
+                this.showStep('step-error');
+            }
+            
+            resetForm() {
+                document.getElementById('job-description-input').value = '';
+                document.getElementById('questions-list').innerHTML = '';
+                this.showStep('step-input');
+            }
+            
+            async analyzeJobDescription() {
+                const jobDescription = document.getElementById('job-description-input').value.trim();
+                
+                if (!jobDescription) {
+                    alert('Please enter a job description');
+                    return;
+                }
+                
+                if (jobDescription.length < 50) {
+                    alert('Please enter a more detailed job description (at least 50 characters)');
+                    return;
+                }
+                
+                this.showStep('step-loading');
+                
+                try {
+                    const response = await fetch('/api/v1/job-analyzer/generate-questions', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            job_description: jobDescription
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to analyze job description: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.displayQuestions(data.questions);
+                    this.showStep('step-results');
+                    
+                } catch (error) {
+                    this.showError(error.message);
+                }
+            }
+            
+            displayQuestions(questions) {
+                const questionsList = document.getElementById('questions-list');
+                questionsList.innerHTML = '';
+                
+                if (!questions || questions.length === 0) {
+                    questionsList.innerHTML = '<p style="text-align: center; color: #64748b;">No questions could be generated from this job description.</p>';
+                    return;
+                }
+                
+                questions.forEach((question, index) => {
+                    const questionCard = document.createElement('div');
+                    questionCard.className = 'question-card';
+                    
+                    questionCard.innerHTML = `
+                        <div class="question-number">Question ${index + 1}</div>
+                        <div class="question-text">${question}</div>
+                    `;
+                    
+                    questionsList.appendChild(questionCard);
+                });
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new JobAnalyzer();
+        });
+    </script>
+</body>
+</html>

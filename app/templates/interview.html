@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview - Interview Analyzer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5em;
+            font-weight: 300;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        .content {
+            padding: 40px;
+        }
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .step.active {
+            display: block;
+        }
+        .question {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        .question h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+        .yes-no-options {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .yes-no-btn {
+            padding: 12px 30px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 16px;
+            font-weight: 500;
+        }
+        .yes-no-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        .yes-no-btn.selected {
+            background: #667eea;
+            color: white;
+        }
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-top: 15px;
+            resize: vertical;
+            min-height: 100px;
+        }
+        .text-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e9ecef;
+            border-radius: 3px;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        .summary {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .summary h3 {
+            margin: 0 0 15px 0;
+            color: #333;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .error {
+            background: #fee;
+            border: 1px solid #fcc;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Interview</h1>
+            <p>Powered by OpenAI - Intelligent candidate assessment</p>
+        </div>
+        
+        <div class="content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress"></div>
+            </div>
+            
+            <!-- Step 1: Start Interview -->
+            <div class="step active" id="step1">
+                <h2>Start Interview</h2>
+                <p>Click the button below to begin the AI-powered interview. The system will analyze the candidate's resume and generate relevant questions.</p>
+                <button class="btn" onclick="startInterview()">Start Interview</button>
+            </div>
+            
+            <!-- Step 2: Yes/No Questions -->
+            <div class="step" id="step2">
+                <h2>Initial Screening Questions</h2>
+                <p>Please answer these yes/no questions based on the candidate's background:</p>
+                <div id="yesNoQuestions"></div>
+                <button class="btn" id="submitYesNo" onclick="submitYesNoAnswers()" disabled>Submit Answers</button>
+            </div>
+            
+            <!-- Step 3: Open-Ended Questions -->
+            <div class="step" id="step3">
+                <h2>Detailed Questions</h2>
+                <p>Please provide detailed answers to these open-ended questions:</p>
+                <div id="openEndedQuestions"></div>
+                <button class="btn" id="completeInterview" onclick="completeInterview()" disabled>Complete Interview</button>
+            </div>
+            
+            <!-- Step 4: Summary -->
+            <div class="step" id="step4">
+                <h2>Interview Complete</h2>
+                <div class="summary">
+                    <h3>Interview Summary</h3>
+                    <div id="interviewSummary"></div>
+                </div>
+                <p><strong>Status:</strong> Interview results have been saved to Salesforce.</p>
+                <button class="btn" onclick="resetInterview()">Start New Interview</button>
+            </div>
+            
+            <!-- Loading State -->
+            <div class="step" id="loading">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p id="loadingText">Processing...</p>
+                </div>
+            </div>
+            
+            <!-- Error State -->
+            <div class="step" id="error">
+                <div class="error">
+                    <h3>Error</h3>
+                    <p id="errorMessage"></p>
+                    <button class="btn" onclick="showStep('step1')">Try Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentInterviewId = null;
+        let currentRecordId = '{{ record_id }}';
+        let yesNoAnswers = [];
+        let openEndedAnswers = [];
+        
+        function showStep(stepId) {
+            document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+            document.getElementById(stepId).classList.add('active');
+            updateProgress();
+        }
+        
+        function showLoading(text = 'Processing...') {
+            document.getElementById('loadingText').textContent = text;
+            showStep('loading');
+        }
+        
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            showStep('error');
+        }
+        
+        function updateProgress() {
+            const steps = ['step1', 'step2', 'step3', 'step4'];
+            const currentStep = steps.find(step => document.getElementById(step).classList.contains('active'));
+            const progress = steps.indexOf(currentStep) / (steps.length - 1) * 100;
+            document.getElementById('progress').style.width = progress + '%';
+        }
+        
+        async function startInterview() {
+            try {
+                showLoading('Starting interview...');
+                
+                const response = await fetch(`/api/v1/interview/${currentRecordId}/start`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({}),
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                currentInterviewId = data.interview_id;
+                
+                // Display yes/no questions
+                const questionsContainer = document.getElementById('yesNoQuestions');
+                questionsContainer.innerHTML = '';
+                
+                data.yes_no_questions.forEach((question, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question';
+                    questionDiv.innerHTML = `
+                        <h3>Question ${index + 1}</h3>
+                        <p>${question}</p>
+                        <div class="yes-no-options">
+                            <button class="yes-no-btn" onclick="selectAnswer(${index}, true)">Yes</button>
+                            <button class="yes-no-btn" onclick="selectAnswer(${index}, false)">No</button>
+                        </div>
+                    `;
+                    questionsContainer.appendChild(questionDiv);
+                });
+                
+                showStep('step2');
+                
+            } catch (error) {
+                console.error('Error starting interview:', error);
+                showError('Failed to start interview: ' + error.message);
+            }
+        }
+        
+        function selectAnswer(questionIndex, answer) {
+            yesNoAnswers[questionIndex] = answer;
+            
+            // Update button states
+            const questionDiv = document.querySelectorAll('.question')[questionIndex];
+            questionDiv.querySelectorAll('.yes-no-btn').forEach(btn => btn.classList.remove('selected'));
+            event.target.classList.add('selected');
+            
+            // Enable submit button if all questions are answered
+            const submitBtn = document.getElementById('submitYesNo');
+            submitBtn.disabled = yesNoAnswers.length < 3 || yesNoAnswers.includes(undefined);
+        }
+        
+        async function submitYesNoAnswers() {
+            try {
+                showLoading('Generating follow-up questions...');
+                
+                const response = await fetch(`/api/v1/interview/${currentInterviewId}/yes-no-answers`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        answers: yesNoAnswers
+                    }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display open-ended questions
+                const questionsContainer = document.getElementById('openEndedQuestions');
+                questionsContainer.innerHTML = '';
+                
+                data.open_ended_questions.forEach((question, index) => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question';
+                    questionDiv.innerHTML = `
+                        <h3>Question ${index + 1}</h3>
+                        <p>${question}</p>
+                        <textarea class="text-input" placeholder="Enter your answer here..." 
+                                  onchange="updateOpenEndedAnswer(${index}, this.value)"></textarea>
+                    `;
+                    questionsContainer.appendChild(questionDiv);
+                });
+                
+                showStep('step3');
+                
+            } catch (error) {
+                console.error('Error submitting answers:', error);
+                showError('Failed to submit answers: ' + error.message);
+            }
+        }
+        
+        function updateOpenEndedAnswer(questionIndex, answer) {
+            openEndedAnswers[questionIndex] = answer;
+            
+            // Enable complete button if all questions are answered
+            const completeBtn = document.getElementById('completeInterview');
+            completeBtn.disabled = openEndedAnswers.length < 2 || openEndedAnswers.includes(undefined);
+        }
+        
+        async function completeInterview() {
+            try {
+                showLoading('Completing interview and saving to Salesforce...');
+                
+                const response = await fetch(`/api/v1/interview/${currentInterviewId}/complete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        interview_id: currentInterviewId,
+                        open_ended_answers: openEndedAnswers
+                    }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Display summary
+                document.getElementById('interviewSummary').innerHTML = data.summary.replace(/\n/g, '<br>');
+                showStep('step4');
+                
+            } catch (error) {
+                console.error('Error completing interview:', error);
+                showError('Failed to complete interview: ' + error.message);
+            }
+        }
+        
+        function resetInterview() {
+            currentInterviewId = null;
+            yesNoAnswers = [];
+            openEndedAnswers = [];
+            showStep('step1');
+        }
+        
+        // Initialize
+        updateProgress();
+    </script>
+</body>
+</html>

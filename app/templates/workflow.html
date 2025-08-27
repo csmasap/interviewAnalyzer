@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Career Workflow - Interview Analyzer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .content {
+            padding: 30px;
+        }
+        
+        .step {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        .step.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .analysis-box {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+        
+        .analysis-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 15px;
+        }
+        
+        .analysis-content {
+            white-space: pre-wrap;
+            line-height: 1.8;
+            color: #475569;
+        }
+        
+        .career-question {
+            background: #fff7ed;
+            border: 2px solid #fed7aa;
+            border-radius: 10px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+        
+        .career-question h3 {
+            color: #c2410c;
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+        
+        .textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #d1d5db;
+            border-radius: 8px;
+            resize: vertical;
+            font-family: inherit;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        
+        .textarea:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+        }
+        
+        .btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .guidance-box {
+            background: #f0fdf4;
+            border: 2px solid #bbf7d0;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+        }
+        
+        .guidance-title {
+            color: #166534;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .jobs-container {
+            margin-top: 30px;
+        }
+        
+        .jobs-title {
+            font-size: 1.5rem;
+            color: #1e293b;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .jobs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .job-card {
+            background: white;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .job-card:hover {
+            border-color: #4f46e5;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .job-title {
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        
+        .job-company {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+        
+        .job-location {
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #4f46e5;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #fef2f2;
+            border: 2px solid #fecaca;
+            color: #dc2626;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        
+        .fitness-container {
+            background: #fefce8;
+            border: 2px solid #fde047;
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            position: relative;
+            overflow: visible;
+        }
+        
+        .fitness-title {
+            color: #a16207;
+            font-weight: 600;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+        
+        .score-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .score-bar-container {
+            position: relative;
+            width: 100%;
+            height: 30px;
+            background: #e5e7eb;
+            border-radius: 15px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .score-bar-container:hover {
+            transform: scale(1.02);
+        }
+        
+        .score-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+            border-radius: 15px;
+            width: 0%;
+            transition: width 1.5s ease-out;
+            position: relative;
+        }
+        
+        .score-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-weight: 600;
+            color: #1f2937;
+            font-size: 14px;
+            z-index: 2;
+        }
+        
+        .score-tooltip {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1f2937;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            max-width: 300px;
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            pointer-events: none;
+        }
+        
+        .score-wrapper:hover .score-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .tooltip-arrow {
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 6px solid #1f2937;
+        }
+        
+        .tooltip-content {
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Career Workflow</h1>
+            <p>AI-powered career guidance and job recommendations</p>
+        </div>
+        
+        <div class="content">
+            <!-- Step 1: Loading -->
+            <div id="step-loading" class="step active">
+                <div class="loading">
+                    Starting workflow and generating analysis...
+                </div>
+            </div>
+            
+            <!-- Step 2: Analysis & Career Question -->
+            <div id="step-analysis" class="step">
+                <div class="analysis-box">
+                    <div class="analysis-title">📊 Candidate Analysis</div>
+                    <div id="analysis-content" class="analysis-content"></div>
+                </div>
+                
+                <div class="analysis-box">
+                    <div class="analysis-title">🎯 Fit & Gaps Assessment</div>
+                    <div id="fit-gaps-content" class="analysis-content"></div>
+                </div>
+                
+                <div class="career-question">
+                    <h3>💭 What is your desired career path?</h3>
+                    <textarea 
+                        id="career-path-input" 
+                        class="textarea" 
+                        placeholder="Describe your career goals and aspirations in detail..."
+                    ></textarea>
+                    <button id="submit-career-path" class="btn">Submit Career Path</button>
+                </div>
+            </div>
+            
+            <!-- Step 3: Guidance & Jobs -->
+            <div id="step-results" class="step">
+                <div class="guidance-box">
+                    <div class="guidance-title">💡 Career Guidance</div>
+                    <div id="guidance-content" class="analysis-content"></div>
+                </div>
+                
+                <div id="fitness-score-container" class="fitness-container" style="display: none;">
+                    <div class="fitness-title">🎯 Career Goal Fitness Score</div>
+                    <div class="score-wrapper">
+                        <div class="score-bar-container">
+                            <div id="score-bar" class="score-bar"></div>
+                            <div id="score-text" class="score-text">0%</div>
+                        </div>
+                        <div id="score-tooltip" class="score-tooltip">
+                            <div class="tooltip-arrow"></div>
+                            <div id="score-reasoning" class="tooltip-content"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="jobs-container">
+                    <div class="jobs-title">🎯 Recommended Positions</div>
+                    <div id="jobs-grid" class="jobs-grid"></div>
+                </div>
+            </div>
+            
+            <!-- Error state -->
+            <div id="step-error" class="step">
+                <div class="error">
+                    <strong>⚠️ Error:</strong> <span id="error-message"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class WorkflowManager {
+            constructor() {
+                this.workflowId = null;
+                this.recordId = this.getRecordIdFromUrl();
+                this.init();
+            }
+            
+            getRecordIdFromUrl() {
+                // Extract record ID from URL or use default for testing
+                const urlParams = new URLSearchParams(window.location.search);
+                return urlParams.get('record_id') || 'a0N123456789012';
+            }
+            
+            async init() {
+                try {
+                    await this.startWorkflow();
+                } catch (error) {
+                    this.showError(error.message);
+                }
+            }
+            
+            showStep(stepId) {
+                document.querySelectorAll('.step').forEach(step => {
+                    step.classList.remove('active');
+                });
+                document.getElementById(stepId).classList.add('active');
+            }
+            
+            showError(message) {
+                document.getElementById('error-message').textContent = message;
+                this.showStep('step-error');
+            }
+            
+            async startWorkflow() {
+                try {
+                    const response = await fetch(`/api/v1/opportunity-discussed/${this.recordId}/workflow/start`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({})
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to start workflow: ${response.statusText}`);
+                    }
+                    
+                    const data = await response.json();
+                    this.workflowId = data.workflow_id;
+                    
+                    // Display analysis
+                    document.getElementById('analysis-content').textContent = data.analysis;
+                    document.getElementById('fit-gaps-content').textContent = data.fit_and_gaps;
+                    
+                    // Setup career path submission
+                    document.getElementById('submit-career-path').addEventListener('click', () => {
+                        this.submitCareerPath();
+                    });
+                    
+                    this.showStep('step-analysis');
+                    
+                } catch (error) {
+                    this.showError(error.message);
+                }
+            }
+            
+            async submitCareerPath() {
+                const careerPath = document.getElementById('career-path-input').value.trim();
+                if (!careerPath) {
+                    alert('Please enter your desired career path');
+                    return;
+                }
+                
+                const submitBtn = document.getElementById('submit-career-path');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Processing...';
+                
+                try {
+                    // Step 2: Submit career path
+                    const response = await fetch(`/api/v1/opportunity-discussed/workflow/${this.workflowId}/career-path`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            career_path: careerPath
+                        })
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to submit career path: ${response.statusText}`);
+                    }
+                    
+                    const guidanceData = await response.json();
+                    
+                    // Display guidance
+                    document.getElementById('guidance-content').textContent = guidanceData.data.career_guidance;
+                    
+                    // Display fitness score if available
+                    if (guidanceData.fitness_score) {
+                        this.displayFitnessScore(guidanceData.fitness_score);
+                    }
+                    
+                    // Immediately complete workflow
+                    await this.completeWorkflow();
+                    
+                } catch (error) {
+                    this.showError(error.message);
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Submit Career Path';
+                }
+            }
+            
+            async completeWorkflow() {
+                try {
+                    const response = await fetch(`/api/v1/opportunity-discussed/workflow/${this.workflowId}/complete`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        }
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error(`Failed to complete workflow: ${response.statusText}`);
+                    }
+                    
+                    const finalData = await response.json();
+                    
+                    // Display jobs
+                    this.displayJobs(finalData.recommended_jobs);
+                    this.showStep('step-results');
+                    
+                } catch (error) {
+                    this.showError(error.message);
+                }
+            }
+            
+            displayJobs(jobs) {
+                const jobsGrid = document.getElementById('jobs-grid');
+                jobsGrid.innerHTML = '';
+                
+                if (!jobs || jobs.length === 0) {
+                    jobsGrid.innerHTML = '<p style="text-align: center; color: #64748b;">No jobs found at this time.</p>';
+                    return;
+                }
+                
+                jobs.forEach(job => {
+                    const jobCard = document.createElement('div');
+                    jobCard.className = 'job-card';
+                    
+                    jobCard.innerHTML = `
+                        <div class="job-title">${job.title || 'No title available'}</div>
+                        <div class="job-company">${job.company || 'Company not specified'}</div>
+                        <div class="job-location">${job.location || 'Location not specified'}</div>
+                    `;
+                    
+                    if (job.job_url) {
+                        jobCard.addEventListener('click', () => {
+                            window.open(job.job_url, '_blank');
+                        });
+                    }
+                    
+                    jobsGrid.appendChild(jobCard);
+                });
+            }
+            
+            displayFitnessScore(fitnessScore) {
+                const scoreBar = document.getElementById('score-bar');
+                const scoreText = document.getElementById('score-text');
+                const scoreReasoning = document.getElementById('score-reasoning');
+                
+                // Animate the progress bar
+                setTimeout(() => {
+                    scoreBar.style.width = `${fitnessScore.score}%`;
+                    scoreText.textContent = `${fitnessScore.score}%`;
+                }, 100);
+                
+                // Set the reasoning tooltip
+                scoreReasoning.textContent = fitnessScore.reasoning;
+                
+                // Show the fitness score container
+                const container = document.getElementById('fitness-score-container');
+                container.style.display = 'block';
+            }
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new WorkflowManager();
+        });
+    </script>
+</body>
+</html>
+
