@@ -13,6 +13,7 @@ from app.deps import (
     get_jobspy_service,
     get_workflow_service,
     get_workflow_state_service,
+    get_salesforce_client,
 )
 from app.models.schemas import (
     OpportunityDiscussed,
@@ -37,13 +38,13 @@ logger = logging.getLogger(__name__)
 
 
 async def _generate_fitness_score(
-    agent: OpenAIAgentService, 
-    analysis: str, 
-    fit_gaps: str, 
+    agent: OpenAIAgentService,
+    analysis: str,
+    fit_gaps: str,
     career_path: str
 ) -> CareerFitnessScore:
     """Generate a 0-100 fitness score with reasoning for how well candidate fits their desired career path."""
-    
+
     prompt = (
         "You are a realistic career assessor who gives honest scores based on market realities. "
         "Score how likely this candidate is to achieve their career goal within 2-3 years, considering:\n"
@@ -65,7 +66,7 @@ async def _generate_fitness_score(
         "SCORE: [number 0-100]\n"
         "REASONING: [honest 1-2 sentence explanation]"
     )
-    
+
     try:
         resp = await agent._client.chat.completions.create(
             model=agent._model,
@@ -75,14 +76,14 @@ async def _generate_fitness_score(
             ],
             temperature=0.3,
         )
-        
+
         content = resp.choices[0].message.content or ""
-        
+
         # Parse score and reasoning
         lines = content.strip().split('\n')
         score = 50  # default
         reasoning = "Assessment could not be completed"
-        
+
         for line in lines:
             if line.startswith("SCORE:"):
                 try:
@@ -92,15 +93,51 @@ async def _generate_fitness_score(
                     pass
             elif line.startswith("REASONING:"):
                 reasoning = line.replace("REASONING:", "").strip()
-        
+
         return CareerFitnessScore(score=score, reasoning=reasoning)
-        
+
     except Exception as e:
         logger.warning("Failed to generate fitness score: %s", e)
         return CareerFitnessScore(
-            score=50, 
+            score=50,
             reasoning="Unable to assess fitness due to technical issue"
         )
+
+
+def _combine_analyses(analyses: list[str]) -> str:
+    """Combine multiple analyses into a comprehensive assessment."""
+    if len(analyses) == 1:
+        return analyses[0]
+
+    combined = "COMPREHENSIVE CANDIDATE ANALYSIS (Based on {} recent opportunities):\n\n".format(len(analyses))
+
+    # Extract key insights from each analysis
+    for i, analysis in enumerate(analyses, 1):
+        combined += f"OPPORTUNITY {i} ANALYSIS:\n{analysis}\n\n"
+
+    # Add synthesis section
+    combined += "SYNTHESIS AND TRENDS:\n"
+    combined += "This analysis combines insights from multiple recent opportunities to provide a comprehensive view of the candidate's qualifications, performance trends, and career trajectory.\n"
+
+    return combined
+
+
+def _combine_fit_gaps(fit_gaps_list: list[str]) -> str:
+    """Combine multiple fit/gaps assessments into a consolidated view."""
+    if len(fit_gaps_list) == 1:
+        return fit_gaps_list[0]
+
+    combined = "COMPREHENSIVE FIT & GAPS ASSESSMENT (Based on {} recent opportunities):\n\n".format(len(fit_gaps_list))
+
+    # Extract key insights from each fit/gaps assessment
+    for i, fit_gaps in enumerate(fit_gaps_list, 1):
+        combined += f"OPPORTUNITY {i} FIT/GAPS:\n{fit_gaps}\n\n"
+
+    # Add synthesis section
+    combined += "OVERALL FIT ASSESSMENT:\n"
+    combined += "This assessment identifies common themes and patterns across multiple opportunities to highlight consistent strengths and recurring development areas.\n"
+
+    return combined
 
 
 @router.get(
@@ -226,40 +263,86 @@ async def search_jobs(
 
 
 @router.post(
-    "/{record_id}/workflow",
+    "/{candidate_id}/workflow",
     response_model=CareerWorkflowResponse,
-    summary="Execute career workflow: analysis -> career path prompt -> guidance -> jobs",
+    summary="Execute career workflow: analysis -> career guidance -> jobs",
 )
 async def execute_career_workflow(
-    record_id: str = Path(
+    candidate_id: str = Path(
         ...,
-        description="Salesforce Id (15–18 chars) of TR1__Opportunity_Discussed__c",
+        description="Salesforce Id (15–18 chars) of candidate (TR1__Candidate__c)",
         min_length=15,
         max_length=18,
         pattern=r"^[A-Za-z0-9]{15,18}$",
     ),
     payload: OpportunityAnalysisRequest = Body(default=OpportunityAnalysisRequest()),
+    career_path: str = "Continue growing in my current field",
     service: OpportunityDiscussedService = Depends(get_opportunity_service),
     workflow: CareerWorkflowService = Depends(get_workflow_service),
+    sf_client = Depends(get_salesforce_client),
 ) -> CareerWorkflowResponse:
-    record = service.get_by_id(record_id=record_id)
-    if record is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
+    records = service.get_by_candidate_id(candidate_id=candidate_id, limit=6)
+
+    if not records:
+        # No opportunity records found - get application record info
+        try:
+            # Query for application records by applicant (candidate)
+            soql = f"SELECT Id, ISA_Link__c FROM TR1__Application__c WHERE TR1__Applicant__c = '{candidate_id}' ORDER BY CreatedDate DESC LIMIT 1"
+            sf = sf_client.get_client()
+            result = sf.query(soql)
+
+            if result.get("totalSize", 0) > 0:
+                app_record = result.get("records", [])[0]
+                isa_link = app_record.get("ISA_Link__c", "")
+
+                message = f"We don't have information about you, please complete an interview at: {isa_link}" if isa_link else "We don't have information about you, please complete an interview."
+
+                return CareerWorkflowResponse(
+                    id=candidate_id,
+                    analysis="We don't have information about you in our system.",
+                    fit_and_gaps="No opportunity records found for analysis.",
+                    career_path=career_path or "Not specified",
+                    career_guidance=message,
+                    recommended_jobs=[],
+                    ai_interview_record_id=None,
+                )
+            else:
+                return CareerWorkflowResponse(
+                    id=candidate_id,
+                    analysis="We don't have information about you in our system.",
+                    fit_and_gaps="No opportunity records found for analysis.",
+                    career_path=career_path or "Not specified",
+                    career_guidance="We don't have information about you, please complete an interview.",
+                    recommended_jobs=[],
+                    ai_interview_record_id=None,
+                )
+
+        except Exception as e:
+            logger.warning("Failed to get application record info: %s", e)
+            return CareerWorkflowResponse(
+                id=candidate_id,
+                analysis="We don't have information about you in our system.",
+                fit_and_gaps="No opportunity records found for analysis.",
+                career_path=career_path or "Not specified",
+                career_guidance="We don't have information about you, please complete an interview.",
+                recommended_jobs=[],
+                ai_interview_record_id=None,
+            )
 
     # Collect workflow results with timeout protection
     workflow_data = {}
-    
+
     try:
         # Add asyncio timeout wrapper
         async def run_workflow():
-            async for step in workflow.execute_workflow(record, job_description=payload.job_description):
+            async for step in workflow.execute_workflow(records, job_description=payload.job_description, career_path=career_path):
                 yield step
-        
+
         workflow_gen = run_workflow()
-        
+
         async for step in workflow_gen:
             logger.info("Workflow step completed: %s", step.step_name)
-            
+
             if step.step_name == "analysis_complete":
                 workflow_data.update(step.data)
             elif step.step_name == "career_path_collected":
@@ -274,19 +357,38 @@ async def execute_career_workflow(
                     detail=f"Workflow failed: {step.data.get('error', 'Unknown error')}"
                 )
 
+        # Create AI Interview record in Salesforce
+        ai_interview_record_id = None
+        try:
+            candidate_analysis = workflow_data["analysis"]
+            career_guidance = workflow_data["career_guidance"]
+
+            ai_interview_record_id = sf_client.create_ai_interview_record(
+                candidate_id=candidate_id,
+                candidate_analysis=candidate_analysis,
+                career_goal=career_path,
+                career_guidance=career_guidance
+            )
+            logger.info("Created AI Interview record: %s", ai_interview_record_id)
+
+        except Exception as e:
+            logger.warning("Failed to create AI Interview record, but continuing with workflow completion: %s", e)
+            # Don't fail the entire workflow if Salesforce record creation fails
+
         return CareerWorkflowResponse(
-            id=record.id,
+            id=candidate_id,
             analysis=workflow_data["analysis"],
             fit_and_gaps=workflow_data["fit_and_gaps"],
             career_path=workflow_data["career_path"],
             career_guidance=workflow_data["career_guidance"],
             recommended_jobs=workflow_data["jobs"],
+            ai_interview_record_id=ai_interview_record_id,
         )
 
     except HTTPException:
         raise
     except Exception as e:
-        logger.exception("Workflow execution failed for record %s: %s", record_id, e)
+        logger.exception("Workflow execution failed for candidate %s: %s", candidate_id, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Workflow execution failed: {e}"
@@ -295,14 +397,14 @@ async def execute_career_workflow(
 
 # New sequential workflow endpoints
 @router.post(
-    "/{record_id}/workflow/start",
+    "/{candidate_id}/workflow/start",
     response_model=WorkflowStartResponse,
     summary="Start career workflow - Step 1: Generate analysis and prompt for career path",
 )
 async def start_career_workflow(
-    record_id: str = Path(
+    candidate_id: str = Path(
         ...,
-        description="Salesforce Id (15–18 chars) of TR1__Opportunity_Discussed__c",
+        description="Salesforce Id (15–18 chars) of candidate (TR1__Candidate__c)",
         min_length=15,
         max_length=18,
         pattern=r"^[A-Za-z0-9]{15,18}$",
@@ -313,36 +415,84 @@ async def start_career_workflow(
     fit_agent: OpenAIFitAgentService = Depends(get_fit_agent_service),
     state_service: WorkflowStateService = Depends(get_workflow_state_service),
 ) -> WorkflowStartResponse:
-    # Get the record
-    record = opp_service.get_by_id(record_id=record_id)
-    if record is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Record not found")
+    # Get the records for the candidate
+    records = opp_service.get_by_candidate_id(candidate_id=candidate_id, limit=6)
+
+    if not records:
+        # No opportunity records found - get application record info
+        try:
+            # Get the application record that was created on page load
+            # We need to find it by querying TR1__Application__c records for this candidate
+            sf_client = get_salesforce_client()
+
+            # Query for application records by applicant (candidate)
+            soql = f"SELECT Id, ISA_Link__c FROM TR1__Application__c WHERE TR1__Applicant__c = '{candidate_id}' ORDER BY CreatedDate DESC LIMIT 1"
+            sf = sf_client.get_client()
+            result = sf.query(soql)
+
+            if result.get("totalSize", 0) > 0:
+                app_record = result.get("records", [])[0]
+                isa_link = app_record.get("ISA_Link__c", "")
+
+                return WorkflowStartResponse(
+                    workflow_id="no-analysis-available",
+                    record_id=candidate_id,
+                    analysis="We don't have information about you in our system.",
+                    fit_and_gaps="No opportunity records found for analysis.",
+                    next_step="interview_required",
+                    message=f"We don't have information about you, please complete an interview at: {isa_link}" if isa_link else "We don't have information about you, please complete an interview."
+                )
+            else:
+                return WorkflowStartResponse(
+                    workflow_id="no-analysis-available",
+                    record_id=candidate_id,
+                    analysis="We don't have information about you in our system.",
+                    fit_and_gaps="No opportunity records found for analysis.",
+                    next_step="interview_required",
+                    message="We don't have information about you, please complete an interview."
+                )
+
+        except Exception as e:
+            logger.warning("Failed to get application record info: %s", e)
+            return WorkflowStartResponse(
+                workflow_id="no-analysis-available",
+                record_id=candidate_id,
+                analysis="We don't have information about you in our system.",
+                fit_and_gaps="No opportunity records found for analysis.",
+                next_step="interview_required",
+                message="We don't have information about you, please complete an interview."
+            )
 
     try:
-        # Step 1: Generate analysis
-        analysis_task = agent.analyze_opportunity(record, job_description=payload.job_description)
-        fit_task = fit_agent.assess_fit(record, job_description=payload.job_description)
-        
-        analysis, fit_gaps = await asyncio.gather(analysis_task, fit_task)
-        
+        # Step 1: Generate analysis for all records concurrently
+        analysis_tasks = [agent.analyze_opportunity(record, job_description=payload.job_description) for record in records]
+        fit_tasks = [fit_agent.assess_fit(record, job_description=payload.job_description) for record in records]
+
+        analyses = await asyncio.gather(*analysis_tasks)
+        fit_gaps_list = await asyncio.gather(*fit_tasks)
+
+        # Combine analyses from multiple records
+        combined_analysis = _combine_analyses(analyses)
+        combined_fit_gaps = _combine_fit_gaps(fit_gaps_list)
+
         # Create workflow state
-        workflow_state = state_service.create_workflow(record_id, payload.job_description)
+        workflow_state = state_service.create_workflow(candidate_id, payload.job_description)
         workflow_state.update_step("analysis_complete", {
-            "analysis": analysis,
-            "fit_and_gaps": fit_gaps
+            "analysis": combined_analysis,
+            "fit_and_gaps": combined_fit_gaps
         })
 
         return WorkflowStartResponse(
             workflow_id=workflow_state.id,
-            record_id=record_id,
-            analysis=analysis,
-            fit_and_gaps=fit_gaps,
+            record_id=candidate_id,
+            analysis=combined_analysis,
+            fit_and_gaps=combined_fit_gaps,
             next_step="career_path",
             message="Analysis complete. Please provide your desired career path."
         )
 
     except Exception as e:
-        logger.exception("Failed to start workflow for record %s: %s", record_id, e)
+        logger.exception("Failed to start workflow for candidate %s: %s", candidate_id, e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to start workflow: {e}"
@@ -443,6 +593,7 @@ async def complete_workflow(
     state_service: WorkflowStateService = Depends(get_workflow_state_service),
     opp_service: OpportunityDiscussedService = Depends(get_opportunity_service),
     jobspy: JobSpyService = Depends(get_jobspy_service),
+    sf_client = Depends(get_salesforce_client),
 ) -> WorkflowFinalResponse:
     # Get workflow state
     workflow_state = state_service.get_workflow(workflow_id)
@@ -456,10 +607,13 @@ async def complete_workflow(
         )
 
     try:
-        # Get the record for job search
-        record = opp_service.get_by_id(record_id=workflow_state.record_id)
-        if not record:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Original record not found")
+        # Get the records for the candidate for job search
+        records = opp_service.get_by_candidate_id(candidate_id=workflow_state.record_id, limit=6)
+        if not records:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No records found for candidate")
+
+        # Use the first record for job search
+        record = records[0]
 
         # Fetch jobs (limited to 3)
         job_override = {"results_wanted": 3}
@@ -476,6 +630,25 @@ async def complete_workflow(
         workflow_state.update_step("completed", {"jobs": jobs})
         workflow_state.mark_completed()
 
+        # Create AI Interview record in Salesforce
+        ai_interview_record_id = None
+        try:
+            candidate_analysis = workflow_state.data["analysis"]
+            career_goal = workflow_state.data["career_path"]
+            career_guidance = workflow_state.data["career_guidance"]
+
+            ai_interview_record_id = sf_client.create_ai_interview_record(
+                candidate_id=workflow_state.record_id,
+                candidate_analysis=candidate_analysis,
+                career_goal=career_goal,
+                career_guidance=career_guidance
+            )
+            logger.info("Created AI Interview record: %s", ai_interview_record_id)
+
+        except Exception as e:
+            logger.warning("Failed to create AI Interview record, but continuing with workflow completion: %s", e)
+            # Don't fail the entire workflow if Salesforce record creation fails
+
         # Prepare final response
         response = WorkflowFinalResponse(
             workflow_id=workflow_id,
@@ -485,7 +658,8 @@ async def complete_workflow(
             career_path=workflow_state.data["career_path"],
             career_guidance=workflow_state.data["career_guidance"],
             recommended_jobs=jobs,
-            completed=True
+            completed=True,
+            ai_interview_record_id=ai_interview_record_id,
         )
 
         # Clean up workflow state (optional)

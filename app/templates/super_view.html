@@ -13,7 +13,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -63,7 +63,7 @@
 
         .services-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
             gap: 25px;
             margin-bottom: 30px;
         }
@@ -116,13 +116,12 @@
         }
 
         .btn-primary {
-            background: linear-gradient(45deg, #667eea, #764ba2);
+            background: linear-gradient(45deg, #F09235, #ff7d1a);
             color: white;
         }
 
         .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(240, 146, 53, 0.4);
         }
 
         .btn-secondary {
@@ -147,13 +146,12 @@
         }
 
         .btn-warning {
-            background: linear-gradient(45deg, #ffc107, #fd7e14);
+            background: linear-gradient(45deg, #F09235, #ff7d1a);
             color: white;
         }
 
         .btn-warning:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 193, 7, 0.4);
+            box-shadow: 0 5px 15px rgba(240, 146, 53, 0.4);
         }
 
         .status-indicator {
@@ -198,13 +196,28 @@
     <div class="container">
         <div class="header">
             <h1>🎯 Interview Analyzer</h1>
-            <p>Your comprehensive career analysis and interview preparation platform</p>
+            <p>Your comprehensive career analysis and interview preparation platform with 4 specialized services</p>
         </div>
 
         <div class="record-info">
             <h3>Salesforce Record ID</h3>
             <div class="record-id">{{ record_id }}</div>
             <p>All services will use this record for analysis and processing</p>
+            {% if application_record_id %}
+            {% if application_status == "created" %}
+            <div style="margin-top: 15px; padding: 10px; background: rgba(40, 167, 69, 0.2); border-radius: 8px; border: 1px solid rgba(40, 167, 69, 0.3);">
+                <span class="status-indicator status-active"></span>
+                <strong>✅ Application Record Created:</strong>
+                <div style="font-family: monospace; font-size: 0.9rem; margin-top: 5px; color: #28a745;">{{ application_record_id }}</div>
+            </div>
+            {% elif application_status == "existing" %}
+            <div style="margin-top: 15px; padding: 10px; background: rgba(255, 193, 7, 0.2); border-radius: 8px; border: 1px solid rgba(255, 193, 7, 0.3);">
+                <span class="status-indicator status-pending"></span>
+                <strong>📋 Application Record Already Exists:</strong>
+                <div style="font-family: monospace; font-size: 0.9rem; margin-top: 5px; color: #856404;">{{ application_record_id }}</div>
+            </div>
+            {% endif %}
+            {% endif %}
         </div>
 
         <div class="services-grid">
@@ -218,14 +231,14 @@
                     or all at once.
                 </p>
                                  <div>
-                     <a href="/workflow?record_id={{ record_id }}" class="btn btn-primary">
-                         📋 Step-by-Step Workflow
+                     <a href="/workflow?record_id={{ record_id }}{% if application_record_id %}&application_record_id={{ application_record_id }}{% endif %}" class="btn btn-primary">
+                         🚀 Career Workflow
                      </a>
                  </div>
             </div>
 
             <!-- Interview Service -->
-            <div class="service-card">
+            <!-- <div class="service-card">
                 <span class="service-icon">🎤</span>
                 <h3 class="service-title">AI Interview</h3>
                 <p class="service-description">
@@ -234,18 +247,18 @@
                     the opportunity discussed.
                 </p>
                                  <div>
-                     <a href="/interview?record_id={{ record_id }}" class="btn btn-primary">
+                     <a href="/interview?record_id={{ record_id }}{% if application_record_id %}&application_record_id={{ application_record_id }}{% endif %}" class="btn btn-primary">
                          📝 Interview Interface
                      </a>
                  </div>
-            </div>
+            </div> -->
 
             <!-- Job Analyzer Service -->
             <div class="service-card">
                 <span class="service-icon">💼</span>
                 <h3 class="service-title">Job Analyzer</h3>
                 <p class="service-description">
-                    Generate targeted interview questions based on job descriptions. 
+                    Generate targeted interview questions based on job descriptions.
                     Perfect for preparing candidates for specific roles.
                 </p>
                                  <div>
@@ -254,10 +267,25 @@
                      </a>
                  </div>
             </div>
+
+            <!-- New Integrated Workflow -->
+            <div class="service-card">
+                <span class="service-icon">✨</span>
+                <h3 class="service-title">New Skill Workflow</h3>
+                <p class="service-description">
+                    A newly integrated skill-based interview workflow within the main application.
+                    Extracts skills, generates questions, and provides an interactive chat experience.
+                </p>
+                <div>
+                    <a href="/new-workflow?record_id={{ record_id }}" class="btn btn-warning">
+                        🚀 Launch New Workflow
+                    </a>
+                </div>
+            </div>
         </div>
 
         <div class="footer">
-            <p>Powered by FastAPI & OpenAI | Salesforce Integration Ready</p>
+            <p>Powered by FastAPI & OpenAI | Salesforce Integration Ready | 4 Specialized Services Available</p>
         </div>
     </div>
 

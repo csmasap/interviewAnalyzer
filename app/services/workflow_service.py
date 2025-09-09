@@ -62,64 +62,112 @@ class CareerWorkflowService:
         logger.info("User provided career path: %s", career_path)
         return career_path
 
-    async def execute_workflow(self, record: OpportunityDiscussed, job_description: Optional[str] = None) -> AsyncGenerator[WorkflowStep, None]:
+    def _combine_analyses(self, analyses: list[str]) -> str:
+        """Combine multiple analyses into a comprehensive assessment."""
+        if len(analyses) == 1:
+            return analyses[0]
+
+        combined = "COMPREHENSIVE CANDIDATE ANALYSIS (Based on {} recent opportunities):\n\n".format(len(analyses))
+
+        # Extract key insights from each analysis
+        for i, analysis in enumerate(analyses, 1):
+            combined += f"OPPORTUNITY {i} ANALYSIS:\n{analysis}\n\n"
+
+        # Add synthesis section
+        combined += "SYNTHESIS AND TRENDS:\n"
+        combined += "This analysis combines insights from multiple recent opportunities to provide a comprehensive view of the candidate's qualifications, performance trends, and career trajectory.\n"
+
+        return combined
+
+    def _combine_fit_gaps(self, fit_gaps_list: list[str]) -> str:
+        """Combine multiple fit/gaps assessments into a consolidated view."""
+        if len(fit_gaps_list) == 1:
+            return fit_gaps_list[0]
+
+        combined = "COMPREHENSIVE FIT & GAPS ASSESSMENT (Based on {} recent opportunities):\n\n".format(len(fit_gaps_list))
+
+        # Extract key insights from each fit/gaps assessment
+        for i, fit_gaps in enumerate(fit_gaps_list, 1):
+            combined += f"OPPORTUNITY {i} FIT/GAPS:\n{fit_gaps}\n\n"
+
+        # Add synthesis section
+        combined += "OVERALL FIT ASSESSMENT:\n"
+        combined += "This assessment identifies common themes and patterns across multiple opportunities to highlight consistent strengths and recurring development areas.\n"
+
+        return combined
+
+    async def execute_workflow(self, records: list[OpportunityDiscussed], job_description: Optional[str] = None, career_path: Optional[str] = None) -> AsyncGenerator[WorkflowStep, None]:
         """
         Execute the complete career workflow:
-        1. Generate analysis + fit/gaps
-        2. Prompt for career path
-        3. Generate career guidance
-        4. Fetch relevant jobs
+        1. Generate analysis + fit/gaps for multiple records
+        2. Generate career guidance (if career_path provided)
+        3. Fetch relevant jobs
         """
         try:
-            # Step 1: Generate analysis
-            logger.info("Workflow Step 1: Generating analysis for record %s", record.id)
-            analysis_task = self._agent.analyze_opportunity(record, job_description)
-            fit_task = self._fit_agent.assess_fit(record, job_description)
-            
-            analysis, fit_gaps = await asyncio.gather(analysis_task, fit_task)
-            
+            if not records:
+                raise ValueError("No records provided for analysis")
+
+            # Step 1: Generate analysis for all records
+            logger.info("Workflow Step 1: Generating analysis for %d records", len(records))
+
+            # Analyze all records concurrently
+            analysis_tasks = [self._agent.analyze_opportunity(record, job_description) for record in records]
+            fit_tasks = [self._fit_agent.assess_fit(record, job_description) for record in records]
+
+            analyses = await asyncio.gather(*analysis_tasks)
+            fit_gaps_list = await asyncio.gather(*fit_tasks)
+
+            # Combine analyses from multiple records
+            combined_analysis = self._combine_analyses(analyses)
+            combined_fit_gaps = self._combine_fit_gaps(fit_gaps_list)
+
             yield WorkflowStep("analysis_complete", {
-                "analysis": analysis,
-                "fit_and_gaps": fit_gaps
+                "analysis": combined_analysis,
+                "fit_and_gaps": combined_fit_gaps,
+                "record_count": len(records)
             })
 
-            # Step 2: Prompt for career path (synchronous terminal interaction)
-            logger.info("Workflow Step 2: Prompting for career path")
-            career_path = self._prompt_career_path()
-            
-            yield WorkflowStep("career_path_collected", {
-                "career_path": career_path
-            })
+            # Step 2: Generate career guidance if career path is provided
+            if career_path:
+                logger.info("Workflow Step 2: Generating career guidance for path: %s", career_path)
 
-            # Step 3: Generate career guidance
-            logger.info("Workflow Step 3: Generating career guidance")
-            guidance = await self._generate_career_guidance(analysis, fit_gaps, career_path)
-            
-            yield WorkflowStep("guidance_complete", {
-                "career_guidance": guidance
-            })
+                yield WorkflowStep("career_path_collected", {
+                    "career_path": career_path
+                })
 
-            # Step 4: Fetch relevant jobs (limited to 3, with timeout protection)
-            logger.info("Workflow Step 4: Fetching relevant jobs")
-            job_override = {"results_wanted": 3}
-            try:
-                jobs = self._jobspy.search(record, override=job_override)
-                if not jobs:
-                    logger.warning("No jobs found, using empty list")
+                # Step 3: Generate career guidance
+                logger.info("Workflow Step 3: Generating career guidance")
+                guidance = await self._generate_career_guidance(combined_analysis, combined_fit_gaps, career_path)
+
+                yield WorkflowStep("guidance_complete", {
+                    "career_guidance": guidance
+                })
+
+                # Step 4: Fetch relevant jobs (use the first record for job search)
+                logger.info("Workflow Step 4: Fetching relevant jobs")
+                job_override = {"results_wanted": 3}
+                try:
+                    jobs = self._jobspy.search(records[0], override=job_override)
+                    if not jobs:
+                        logger.warning("No jobs found, using empty list")
+                        jobs = []
+                except Exception as e:
+                    logger.warning("Job search failed, continuing with empty list: %s", e)
                     jobs = []
-            except Exception as e:
-                logger.warning("Job search failed, continuing with empty list: %s", e)
-                jobs = []
-            
-            yield WorkflowStep("jobs_complete", {
-                "jobs": jobs
-            })
 
-            logger.info("Workflow completed successfully for record %s", record.id)
+                yield WorkflowStep("jobs_complete", {
+                    "jobs": jobs
+                })
+
+                logger.info("Workflow completed successfully for %d records", len(records))
+            else:
+                # If no career path provided, just return analysis
+                logger.info("Workflow completed with analysis only for %d records", len(records))
 
         except Exception as e:
-            logger.exception("Workflow failed for record %s: %s", record.id, e)
+            record_ids = [r.id for r in records] if records else []
+            logger.exception("Workflow failed for records %s: %s", record_ids, e)
             yield WorkflowStep("error", {
                 "error": str(e),
-                "record_id": record.id
+                "record_ids": record_ids
             })

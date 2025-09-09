@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     # OpenAI
     openai_api_key: Optional[str] = Field(default=None, alias="OPENAI_API_KEY")
     openai_base_url: Optional[str] = Field(default=None, alias="OPENAI_BASE_URL")
-    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    openai_model: str = Field(default="gpt-5-mini-2025-08-07", alias="OPENAI_MODEL")
     openai_timeout_seconds: int = Field(default=60, alias="OPENAI_TIMEOUT_SECONDS")
     openai_max_retries: int = Field(default=2, alias="OPENAI_MAX_RETRIES")
 

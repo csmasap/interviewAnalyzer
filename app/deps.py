@@ -9,7 +9,9 @@ from app.services.jobspy_service import JobSpyService
 from app.services.workflow_service import CareerWorkflowService
 from app.services.workflow_state_service import WorkflowStateService
 from app.services.job_analyzer_service import JobAnalyzerService
+from app.services.skill_interview_service import SkillInterviewService
 from app.services.interview_service import InterviewService
+from app.services.new_workflow_service import NewWorkflowService
 
 
 @lru_cache(maxsize=1)
@@ -60,5 +62,15 @@ def get_job_analyzer_service() -> JobAnalyzerService:
 
 
 @lru_cache(maxsize=1)
+def get_skill_interview_service() -> SkillInterviewService:
+    return SkillInterviewService(settings=get_settings())
+
+
+@lru_cache(maxsize=1)
 def get_interview_service() -> InterviewService:
     return InterviewService(settings=get_settings())
+
+
+@lru_cache(maxsize=1)
+def get_new_workflow_service() -> NewWorkflowService:
+    return NewWorkflowService(settings=get_settings())

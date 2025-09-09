@@ -35,25 +35,88 @@ class InterviewService:
 
     async def start_interview(self, record_id: str) -> Dict[str, Any]:
         """Start an interview by generating a position and yes/no questions."""
-        
-        # Get the opportunity record
-        record_data = self._salesforce_client.query_opportunity_discussed_by_id(record_id)
-        if not record_data:
-            raise ValueError(f"Opportunity record {record_id} not found")
-        
+
+        # Determine if record_id is an Opportunity_Discussed__c ID or Contact ID
+        record_data = None
+        candidate_id = record_id
+        opportunity_record_id = None
+
+        logger.info(f"Starting interview for record_id: {record_id}")
+
+        # First try to get the record as an Opportunity_Discussed__c ID
+        logger.info(f"Trying direct Opportunity_Discussed__c lookup for: {record_id}")
+        try:
+            record_data = self._salesforce_client.query_opportunity_discussed_by_id(record_id)
+        except Exception as e:
+            logger.error(f"Salesforce query failed for direct lookup: {str(e)}")
+            raise ValueError(f"Failed to connect to Salesforce: {str(e)}")
+
+        if record_data:
+            # It's an Opportunity_Discussed__c record
+            logger.info(f"Found Opportunity_Discussed__c record: {record_data.get('Id')}")
+            opportunity_record_id = record_id
+            candidate_id = record_data.get("TR1__Candidate__c")
+        else:
+            # Try to find Opportunity_Discussed__c records by Contact ID
+            logger.info(f"No direct opportunity record found, trying Contact lookup for: {record_id}")
+            try:
+                opportunity_records = self._salesforce_client.query_opportunity_discussed_by_candidate(record_id, limit=1)
+            except Exception as e:
+                logger.error(f"Salesforce query failed for Contact lookup: {str(e)}")
+                raise ValueError(f"Failed to connect to Salesforce: {str(e)}")
+            if opportunity_records:
+                # Use the most recent opportunity record
+                record_data = opportunity_records[0]
+                opportunity_record_id = record_data.get("Id")
+                candidate_id = record_id
+                logger.info(f"Found opportunity record via Contact lookup: {opportunity_record_id}")
+            else:
+                # No opportunity records found, try to query Contact directly
+                logger.info(f"No opportunity records found, trying direct Contact lookup for: {record_id}")
+                try:
+                    contact_data = self._salesforce_client.query_contact_by_id(record_id)
+                    if contact_data:
+                        logger.info(f"Found Contact record: {contact_data.get('Id')}")
+                        # Use Contact data directly, create a mock opportunity-like structure
+                        record_data = {
+                            "Id": record_id,  # Use Contact ID as the record ID
+                            "TR1__Candidate__r": {
+                                "Name": contact_data.get("Name"),
+                                "Email": contact_data.get("Email"),
+                                "Candidate_s_Resume_TXT__c": contact_data.get("Candidate_s_Resume_TXT__c")
+                            }
+                        }
+                        opportunity_record_id = None  # No opportunity record
+                        candidate_id = record_id
+                        logger.info("Using Contact data for interview (no opportunity record)")
+                    else:
+                        logger.error(f"No Contact record found for ID {record_id}")
+                        raise ValueError(f"No Contact record found for ID {record_id}")
+                except Exception as e:
+                    logger.error(f"Failed to query Contact record: {str(e)}")
+                    raise ValueError(f"Failed to query Contact record: {str(e)}")
+
         # Extract resume text
         resume_text = record_data.get("TR1__Candidate__r", {}).get("Candidate_s_Resume_TXT__c", "")
-        if not resume_text:
-            raise ValueError("Candidate resume text not found")
-        
+        if not resume_text or not resume_text.strip():
+            record_type = "Contact" if opportunity_record_id is None else "Opportunity"
+            logger.error(f"No resume text found in {record_type} record {record_data.get('Id', 'unknown')}")
+            raise ValueError(f"No resume text found. Please ensure the {record_type.lower()} record has resume text in the Candidate_s_Resume_TXT__c field.")
+
         # Generate position title and yes/no questions using first agent
-        position_title, yes_no_questions = await self._generate_position_and_questions(resume_text)
-        
+        try:
+            position_title, yes_no_questions = await self._generate_position_and_questions(resume_text)
+        except Exception as e:
+            logger.error(f"Failed to generate interview questions: {str(e)}")
+            raise ValueError(f"Failed to generate interview questions: {str(e)}")
+
         # Create interview session
         interview_id = str(uuid.uuid4())
         interview_session = {
             "interview_id": interview_id,
-            "record_id": record_id,
+            "record_id": record_id,  # Original record_id passed (could be contact or opportunity)
+            "candidate_id": candidate_id,  # Contact ID
+            "opportunity_record_id": opportunity_record_id,  # Opportunity_Discussed__c ID
             "position_title": position_title,
             "yes_no_questions": yes_no_questions,
             "resume_text": resume_text,
@@ -63,9 +126,9 @@ class InterviewService:
             "open_ended_answers": None,
             "summary": None
         }
-        
+
         self._interview_sessions[interview_id] = interview_session
-        
+
         return {
             "interview_id": interview_id,
             "record_id": record_id,
@@ -108,23 +171,24 @@ class InterviewService:
             "message": "Please answer the open-ended questions."
         }
 
-    async def complete_interview(self, interview_id: str, open_ended_answers: List[str]) -> Dict[str, Any]:
+    async def complete_interview(self, interview_id: str, open_ended_answers: List[str], application_record_id: Optional[str] = None) -> Dict[str, Any]:
         """Complete the interview and save to Salesforce."""
-        
+
         if interview_id not in self._interview_sessions:
             raise ValueError("Interview session not found")
-        
+
         session = self._interview_sessions[interview_id]
         if session["step"] != "open_ended_questions":
             raise ValueError("Invalid step. Expected open-ended questions step.")
-        
+
         if len(open_ended_answers) != len(session["open_ended_questions"]):
             raise ValueError(f"Expected {len(session['open_ended_questions'])} answers, got {len(open_ended_answers)}")
-        
-        # Store answers
+
+        # Store answers and application_record_id
         session["open_ended_answers"] = open_ended_answers
+        session["application_record_id"] = application_record_id
         session["step"] = "completed"
-        
+
         # Generate interview summary
         summary = await self._generate_interview_summary(
             session["resume_text"],
@@ -134,20 +198,41 @@ class InterviewService:
             session["open_ended_questions"],
             open_ended_answers
         )
-        
+
         session["summary"] = summary
-        
+
         # Save to Salesforce
+        # Use opportunity_record_id if available, otherwise use the original record_id
+        salesforce_record_id = session.get("opportunity_record_id") or session["record_id"]
         await self._save_interview_to_salesforce(
-            session["record_id"],
-            summary
+            salesforce_record_id,
+            summary,
+            application_record_id
         )
+
+        # Create TR1__Opportunity_Discussed__c record if application_record_id is provided
+        opportunity_record_id = None
+        if application_record_id:
+            try:
+                # Use candidate_id from session, which is the Contact ID
+                candidate_id_for_record = session.get("candidate_id") or session["record_id"]
+                opportunity_record_id = self._salesforce_client.create_opportunity_discussed_record(
+                    candidate_id=candidate_id_for_record,
+                    application_id=application_record_id,
+                    screening_transcript=summary,
+                    job_id='a0WPM0000045Kjl2AE',
+                    record_type_id='012PM000000pSYYYA2'
+                )
+                logger.info("Created TR1__Opportunity_Discussed__c record: %s", opportunity_record_id)
+            except Exception as e:
+                logger.warning("Failed to create TR1__Opportunity_Discussed__c record, but continuing: %s", e)
         
         return {
             "interview_id": interview_id,
             "record_id": session["record_id"],
             "summary": summary,
-            "message": "Interview completed and saved to Salesforce."
+            "message": "Interview completed and saved to Salesforce.",
+            "opportunity_record_id": opportunity_record_id
         }
 
     async def _generate_position_and_questions(self, resume_text: str) -> tuple[str, List[str]]:
@@ -329,16 +414,46 @@ class InterviewService:
             logger.error("Failed to generate interview summary: %s", e)
             return "Interview summary could not be generated due to technical issues."
 
-    async def _save_interview_to_salesforce(self, record_id: str, summary: str) -> None:
+    async def _save_interview_to_salesforce(self, record_id: str, summary: str, application_record_id: Optional[str] = None) -> None:
         """Save the interview record to Salesforce."""
-        
+
         try:
             sf = self._salesforce_client.get_client()
-            
-            # Check if AI_Interview__c record already exists
-            query = f"SELECT Id FROM AI_Interview__c WHERE Opportunity_Discussed__c = '{record_id}'"
+
+            # Determine if record_id is an Opportunity_Discussed__c ID or Contact ID
+            opportunity_record_id = record_id
+
+            # Check if this is a Contact ID (starts with 003) and we need to create/find an opportunity record
+            if record_id.startswith("003"):
+                logger.info(f"Record ID {record_id} appears to be a Contact ID, checking for opportunity records")
+
+                # Try to find existing opportunity records for this contact
+                opportunity_records = self._salesforce_client.query_opportunity_discussed_by_candidate(record_id, limit=1)
+                if opportunity_records:
+                    opportunity_record_id = opportunity_records[0]["Id"]
+                    logger.info(f"Found existing opportunity record: {opportunity_record_id}")
+                else:
+                    # No opportunity record exists, create one
+                    logger.info(f"No opportunity record found for contact {record_id}, creating one")
+                    try:
+                        opportunity_record_id = self._salesforce_client.create_opportunity_discussed_record(
+                            candidate_id=record_id,
+                            application_id=application_record_id,  # Use the application_record_id from the interview
+                            screening_transcript=summary,
+                            job_id='a0WPM0000045Kjl2AE',
+                            record_type_id='012PM000000pSYYYA2'
+                        )
+                        logger.info(f"Created new opportunity record: {opportunity_record_id}")
+                    except Exception as create_error:
+                        logger.error(f"Failed to create opportunity record for contact {record_id}: {create_error}")
+                        raise RuntimeError(f"Failed to create opportunity record for interview results: {create_error}")
+
+            # Now save the interview record with the opportunity ID
+            # COMMENTED OUT: AI_Interview__c record creation at end of interview
+            """
+            query = f"SELECT Id FROM AI_Interview__c WHERE Opportunity_Discussed__c = '{opportunity_record_id}'"
             result = sf.query(query)
-            
+
             if result.get("totalSize", 0) > 0:
                 # Update existing record
                 interview_id = result["records"][0]["Id"]
@@ -349,11 +464,13 @@ class InterviewService:
             else:
                 # Create new record
                 new_record = sf.AI_Interview__c.create({
-                    "Opportunity_Discussed__c": record_id,
+                    "Opportunity_Discussed__c": opportunity_record_id,
                     "Interview_Summary__c": summary
                 })
                 logger.info("Created new AI_Interview__c record %s", new_record["id"])
-                
+            """
+            logger.info("AI_Interview__c record creation commented out - only TR1__Opportunity_Discussed__c created")
+
         except Exception as e:
             logger.error("Failed to save interview to Salesforce: %s", e)
             raise RuntimeError(f"Failed to save interview to Salesforce: {e}")

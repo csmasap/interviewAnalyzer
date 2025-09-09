@@ -15,7 +15,7 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
             color: #333;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -30,7 +30,7 @@
         }
         
         .header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
             color: white;
             padding: 30px;
             text-align: center;
@@ -113,7 +113,7 @@
         }
         
         .btn {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
             color: white;
             border: none;
             padding: 12px 30px;
@@ -126,8 +126,7 @@
         }
         
         .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 5px 15px rgba(240, 146, 53, 0.3);
         }
         
         .btn:disabled {
@@ -266,12 +265,12 @@
         }
         
         .score-bar-container:hover {
-            transform: scale(1.02);
+            box-shadow: 0 5px 15px rgba(240, 146, 53, 0.2);
         }
         
         .score-bar {
             height: 100%;
-            background: linear-gradient(90deg, #ef4444 0%, #f59e0b 50%, #10b981 100%);
+            background: linear-gradient(90deg, #ef4444 0%, #F09235 50%, #10b981 100%);
             border-radius: 15px;
             width: 0%;
             transition: width 1.5s ease-out;
@@ -328,6 +327,130 @@
         
         .tooltip-content {
             line-height: 1.4;
+        }
+
+        /* No Records View Styles */
+        .no-records-container {
+            text-align: center;
+            padding: 60px 40px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .no-records-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .no-records-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .no-records-description {
+            font-size: 1.1rem;
+            color: #64748b;
+            line-height: 1.6;
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .no-records-actions {
+            margin-bottom: 50px;
+        }
+
+        .primary-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
+            color: white;
+            text-decoration: none;
+            padding: 18px 32px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+            border: none;
+            cursor: pointer;
+        }
+
+        .primary-action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(240, 146, 53, 0.4);
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-icon {
+            font-size: 1.5rem;
+        }
+
+        .btn-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .btn-description {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .no-records-benefits {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-top: 40px;
+        }
+
+        .benefit-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .benefit-icon {
+            font-size: 2rem;
+        }
+
+        .benefit-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .no-records-container {
+                padding: 40px 20px;
+            }
+
+            .no-records-title {
+                font-size: 1.8rem;
+            }
+
+            .no-records-benefits {
+                flex-direction: column;
+                gap: 20px;
+            }
+
+            .primary-action-btn {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px 24px;
+            }
+
+            .btn-text, .btn-description {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
@@ -438,6 +561,49 @@
                 document.getElementById('error-message').textContent = message;
                 this.showStep('step-error');
             }
+
+            showNoRecordsMessage(message) {
+                // Create a polished no records view
+                const content = document.querySelector('.content');
+
+                // Clear existing content
+                content.innerHTML = '';
+
+                // Create enhanced no records message
+                const noRecordsDiv = document.createElement('div');
+                noRecordsDiv.innerHTML = `
+                    <div class="no-records-container">
+                        <div class="no-records-icon">🎯</div>
+                        <h2 class="no-records-title">Welcome to Your Career Journey!</h2>
+                        <div class="no-records-description">
+                            ${message}
+                        </div>
+                        <div class="no-records-actions">
+                           <a href="/new-workflow?record_id=${this.recordId}" class="primary-action-btn">
+                               <span class="btn-icon">🎤</span>
+                               <span class="btn-text">Start New Skill Workflow</span>
+                               <span class="btn-description">Get personalized career insights</span>
+                           </a>
+                       </div>
+                        <div class="no-records-benefits">
+                            <div class="benefit-item">
+                                <span class="benefit-icon">🤖</span>
+                                <span class="benefit-text">AI-powered analysis</span>
+                            </div>
+                            <div class="benefit-item">
+                                <span class="benefit-icon">📊</span>
+                                <span class="benefit-text">Career recommendations</span>
+                            </div>
+                            <div class="benefit-item">
+                                <span class="benefit-icon">🎯</span>
+                                <span class="benefit-text">Personalized guidance</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                content.appendChild(noRecordsDiv);
+            }
             
             async startWorkflow() {
                 try {
@@ -448,25 +614,31 @@
                         },
                         body: JSON.stringify({})
                     });
-                    
+
                     if (!response.ok) {
                         throw new Error(`Failed to start workflow: ${response.statusText}`);
                     }
-                    
+
                     const data = await response.json();
                     this.workflowId = data.workflow_id;
-                    
+
+                    // Check if no records were found
+                    if (this.workflowId === 'no-analysis-available') {
+                        this.showNoRecordsMessage(data.message);
+                        return;
+                    }
+
                     // Display analysis
                     document.getElementById('analysis-content').textContent = data.analysis;
                     document.getElementById('fit-gaps-content').textContent = data.fit_and_gaps;
-                    
+
                     // Setup career path submission
                     document.getElementById('submit-career-path').addEventListener('click', () => {
                         this.submitCareerPath();
                     });
-                    
+
                     this.showStep('step-analysis');
-                    
+
                 } catch (error) {
                     this.showError(error.message);
                 }

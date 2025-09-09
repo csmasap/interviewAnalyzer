@@ -37,18 +37,19 @@ class OpportunityAnalysisResponse(BaseModel):
 
 
 class CareerWorkflowResponse(BaseModel):
-    id: str
+    id: str  # Candidate ID (TR1__Candidate__c)
     analysis: str
     fit_and_gaps: str
     career_path: str
     career_guidance: str
     recommended_jobs: List[Dict[str, Any]]
+    ai_interview_record_id: Optional[str] = None
 
 
 # New sequential workflow schemas
 class WorkflowStartResponse(BaseModel):
     workflow_id: str
-    record_id: str
+    record_id: str  # Candidate ID (TR1__Candidate__c)
     analysis: str
     fit_and_gaps: str
     next_step: str
@@ -76,13 +77,14 @@ class WorkflowStepResponse(BaseModel):
 
 class WorkflowFinalResponse(BaseModel):
     workflow_id: str
-    record_id: str
+    record_id: str  # Candidate ID (TR1__Candidate__c)
     analysis: str
     fit_and_gaps: str
     career_path: str
     career_guidance: str
     recommended_jobs: List[Dict[str, Any]]
     completed: bool
+    ai_interview_record_id: Optional[str] = None
 
 
 # Job Analyzer schemas
@@ -117,9 +119,11 @@ class InterviewOpenEndedResponse(BaseModel):
 class InterviewCompleteRequest(BaseModel):
     interview_id: str
     open_ended_answers: List[str]
+    application_record_id: Optional[str] = None
 
 class InterviewCompleteResponse(BaseModel):
     interview_id: str
     record_id: str
     summary: str
     message: str
+    opportunity_record_id: Optional[str] = None

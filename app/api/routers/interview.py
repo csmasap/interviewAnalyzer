@@ -28,19 +28,18 @@ logger = logging.getLogger(__name__)
 async def start_interview(
     record_id: str = Path(
         ...,
-        description="Salesforce Id (15–18 chars) of TR1__Opportunity_Discussed__c",
+        description="Salesforce Id (15–18 chars) of Contact (003...) or TR1__Opportunity_Discussed__c record",
         min_length=15,
         max_length=18,
         pattern=r"^[A-Za-z0-9]{15,18}$",
     ),
-    payload: InterviewStartRequest = Body(...),
     interview_service: InterviewService = Depends(get_interview_service),
 ) -> InterviewStartResponse:
     """Start an interview by generating a position and three yes/no questions."""
     
     try:
         result = await interview_service.start_interview(record_id)
-        
+
         return InterviewStartResponse(
             interview_id=result["interview_id"],
             record_id=result["record_id"],
@@ -48,11 +47,18 @@ async def start_interview(
             yes_no_questions=result["yes_no_questions"],
             message=result["message"]
         )
-        
+
     except ValueError as e:
+        logger.error(f"ValueError in start_interview for record {record_id}: {str(e)}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Unexpected error in start_interview for record {record_id}: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Unexpected error: {str(e)}"
         )
     except Exception as e:
         logger.exception("Failed to start interview for record %s: %s", record_id, e)
@@ -110,13 +116,18 @@ async def complete_interview(
     """Complete the interview and save results to Salesforce."""
     
     try:
-        result = await interview_service.complete_interview(interview_id, payload.open_ended_answers)
+        result = await interview_service.complete_interview(
+            interview_id,
+            payload.open_ended_answers,
+            application_record_id=payload.application_record_id
+        )
         
         return InterviewCompleteResponse(
             interview_id=result["interview_id"],
             record_id=result["record_id"],
             summary=result["summary"],
-            message=result["message"]
+            message=result["message"],
+            opportunity_record_id=result.get("opportunity_record_id")
         )
         
     except ValueError as e:

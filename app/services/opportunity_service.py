@@ -90,3 +90,10 @@ class OpportunityDiscussedService:
         if raw is None:
             return None
         return _to_domain(raw)
+
+    def get_by_candidate_id(self, candidate_id: str, limit: int = 6) -> list[OpportunityDiscussed]:
+        """Get the latest opportunity discussed records for a candidate."""
+        raw_records = self._sf_client.query_opportunity_discussed_by_candidate(
+            candidate_id=candidate_id, limit=limit
+        )
+        return [_to_domain(raw) for raw in raw_records]
