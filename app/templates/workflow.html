@@ -4,7 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Career Workflow - Interview Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        /* --- Base Styles & Theme --- */
+        :root {
+            --theme-primary: linear-gradient(135deg, hsl(33 93% 54%) 0%, hsl(33 93% 54%) 100%); /* Main orange accent */
+            --theme-primary-dark: linear-gradient(135deg, hsl(33 93% 54%) 0%, hsl(33 93% 54%) 100%);
+            --text-header: #0a2342; /* Deep navy for text */
+            --text-body: #475569;
+            --text-muted: #64748b;
+            --bg-light: #f8f9fa; /* Light gray background */
+            --border-color: #e2e8f0;
+        }
+
         * {
             box-sizing: border-box;
             margin: 0;
@@ -12,42 +26,52 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
-            color: #333;
-            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
+            color: var(--text-body);
+            background-color: var(--bg-light);
             min-height: 100vh;
             padding: 20px;
         }
         
+        /* --- Layout & Main Container --- */
         .container {
             max-width: 800px;
-            margin: 0 auto;
+            margin: 20px auto;
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            border: 1px solid var(--border-color);
             overflow: hidden;
         }
         
         .header {
-            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
-            color: white;
+            background: #ffffff;
+            color: var(--text-header);
             padding: 30px;
             text-align: center;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .header h1 {
             font-size: 2rem;
-            margin-bottom: 10px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
         }
         
         .content {
             padding: 30px;
         }
         
+        /* --- Step Animation --- */
         .step {
             display: none;
-            animation: fadeIn 0.5s ease-in;
+            animation: fadeIn 0.5s ease-in-out;
         }
         
         .step.active {
@@ -55,41 +79,39 @@
         }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
         
-        .analysis-box {
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
+        /* --- Component Styles --- */
+        .analysis-box, .guidance-box, .career-question, .fitness-container, .error {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             padding: 25px;
             margin-bottom: 25px;
         }
-        
-        .analysis-title {
+
+        .analysis-title, .guidance-title, .fitness-title {
             font-size: 1.2rem;
             font-weight: 600;
-            color: #1e293b;
+            color: var(--text-header);
             margin-bottom: 15px;
         }
         
         .analysis-content {
             white-space: pre-wrap;
-            line-height: 1.8;
-            color: #475569;
+            line-height: 1.7;
+            color: var(--text-body);
         }
         
         .career-question {
-            background: #fff7ed;
-            border: 2px solid #fed7aa;
-            border-radius: 10px;
-            padding: 25px;
-            margin-bottom: 20px;
+            background: #fffaf5;
+            border-color: #fed7aa;
         }
         
         .career-question h3 {
-            color: #c2410c;
+            color: var(--text-header);
             margin-bottom: 15px;
             font-size: 1.1rem;
         }
@@ -98,22 +120,22 @@
             width: 100%;
             min-height: 120px;
             padding: 15px;
-            border: 2px solid #d1d5db;
+            border: 1px solid #d1d5db;
             border-radius: 8px;
             resize: vertical;
             font-family: inherit;
             font-size: 16px;
-            transition: border-color 0.3s ease;
+            transition: all 0.2s ease;
         }
         
         .textarea:focus {
             outline: none;
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            border-color: var(--theme-primary);
+            box-shadow: 0 0 0 3px rgba(254, 80, 0, 0.15);
         }
         
         .btn {
-            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
+            background-color: var(--theme-primary);
             color: white;
             border: none;
             padding: 12px 30px;
@@ -121,12 +143,14 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             margin-top: 15px;
         }
         
         .btn:hover {
-            box-shadow: 0 5px 15px rgba(240, 146, 53, 0.3);
+            background-color: var(--theme-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         
         .btn:disabled {
@@ -136,27 +160,10 @@
             box-shadow: none;
         }
         
-        .guidance-box {
-            background: #f0fdf4;
-            border: 2px solid #bbf7d0;
-            border-radius: 10px;
-            padding: 25px;
-            margin: 20px 0;
-        }
-        
-        .guidance-title {
-            color: #166534;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-        
-        .jobs-container {
-            margin-top: 30px;
-        }
-        
+        /* --- Job Cards --- */
         .jobs-title {
             font-size: 1.5rem;
-            color: #1e293b;
+            color: var(--text-header);
             margin-bottom: 20px;
             text-align: center;
         }
@@ -169,288 +176,100 @@
         
         .job-card {
             background: white;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
             padding: 20px;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             cursor: pointer;
         }
         
         .job-card:hover {
-            border-color: #4f46e5;
+            border-color: var(--theme-primary);
             transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.07);
         }
         
         .job-title {
             font-weight: 600;
-            color: #1e293b;
+            color: var(--text-header);
             margin-bottom: 8px;
         }
+        .job-company { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 8px; }
+        .job-location { color: #94a3b8; font-size: 0.85rem; }
         
-        .job-company {
-            color: #64748b;
-            font-size: 0.9rem;
-            margin-bottom: 8px;
-        }
-        
-        .job-location {
-            color: #94a3b8;
-            font-size: 0.85rem;
-        }
-        
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #64748b;
-        }
-        
+        /* --- Loading & Error --- */
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
         .loading::after {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #4f46e5;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-left: 10px;
+            content: ''; display: inline-block; width: 20px; height: 20px;
+            border: 3px solid #f3f3f3; border-top: 3px solid var(--theme-primary);
+            border-radius: 50%; animation: spin 1s linear infinite; margin-left: 10px;
         }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        .error { background: #fef2f2; border-color: #fecaca; color: #dc2626; }
         
-        .error {
-            background: #fef2f2;
-            border: 2px solid #fecaca;
-            color: #dc2626;
-            padding: 20px;
-            border-radius: 10px;
-            margin: 20px 0;
-        }
-        
-        .fitness-container {
-            background: #fefce8;
-            border: 2px solid #fde047;
-            border-radius: 10px;
-            padding: 25px;
-            margin: 20px 0;
-            position: relative;
-            overflow: visible;
-        }
-        
-        .fitness-title {
-            color: #a16207;
-            font-weight: 600;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-        }
-        
-        .score-wrapper {
-            position: relative;
-            z-index: 1;
-        }
-        
+        /* --- Fitness Score Bar --- */
         .score-bar-container {
-            position: relative;
-            width: 100%;
-            height: 30px;
-            background: #e5e7eb;
-            border-radius: 15px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .score-bar-container:hover {
-            box-shadow: 0 5px 15px rgba(240, 146, 53, 0.2);
+            position: relative; width: 100%; height: 30px;
+            background: #e5e7eb; border-radius: 15px; overflow: hidden;
+            cursor: pointer; transition: all 0.3s ease;
         }
         
         .score-bar {
             height: 100%;
-            background: linear-gradient(90deg, #ef4444 0%, #F09235 50%, #10b981 100%);
-            border-radius: 15px;
-            width: 0%;
-            transition: width 1.5s ease-out;
-            position: relative;
+            background: linear-gradient(90deg, #f87171 0%, #fb923c 50%, #4ade80 100%);
+            border-radius: 15px; width: 0%;
+            transition: width 1.5s cubic-bezier(0.25, 1, 0.5, 1);
         }
-        
         .score-text {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-weight: 600;
-            color: #1f2937;
-            font-size: 14px;
-            z-index: 2;
+            position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); font-weight: 600;
+            color: #1f2937; font-size: 14px; z-index: 2;
         }
-        
         .score-tooltip {
-            position: absolute;
-            bottom: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1f2937;
-            color: white;
-            padding: 12px 16px;
-            border-radius: 8px;
-            font-size: 14px;
-            max-width: 300px;
-            text-align: center;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            pointer-events: none;
+            position: absolute; bottom: 45px; left: 50%; transform: translateX(-50%);
+            background: #1f2937; color: white; padding: 12px 16px; border-radius: 8px;
+            font-size: 14px; max-width: 320px; text-align: center; opacity: 0;
+            visibility: hidden; transition: all 0.3s ease; z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); pointer-events: none;
         }
-        
-        .score-wrapper:hover .score-tooltip {
-            opacity: 1;
-            visibility: visible;
-        }
-        
+        .score-wrapper:hover .score-tooltip { opacity: 1; visibility: visible; }
         .tooltip-arrow {
-            position: absolute;
-            bottom: -6px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 0;
-            border-left: 6px solid transparent;
-            border-right: 6px solid transparent;
-            border-top: 6px solid #1f2937;
+            position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 6px solid transparent;
+            border-right: 6px solid transparent; border-top: 6px solid #1f2937;
         }
+        .tooltip-content { line-height: 1.4; }
+
+        /* --- No Records View --- */
+        .no-records-container { text-align: center; padding: 60px 40px; }
+        .no-records-icon { font-size: 4rem; margin-bottom: 20px; color: var(--theme-primary); }
+        .no-records-title { font-size: 2rem; font-weight: 700; color: var(--text-header); margin-bottom: 15px; }
+        .no-records-description { font-size: 1.1rem; color: var(--text-muted); margin-bottom: 30px; max-width: 500px; margin-left: auto; margin-right: auto; }
         
-        .tooltip-content {
-            line-height: 1.4;
-        }
-
-        /* No Records View Styles */
-        .no-records-container {
-            text-align: center;
-            padding: 60px 40px;
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .no-records-icon {
-            font-size: 4rem;
-            margin-bottom: 20px;
-            display: block;
-        }
-
-        .no-records-title {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1e293b;
-            margin-bottom: 20px;
-            line-height: 1.2;
-        }
-
-        .no-records-description {
-            font-size: 1.1rem;
-            color: #64748b;
-            line-height: 1.6;
-            margin-bottom: 40px;
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .no-records-actions {
-            margin-bottom: 50px;
-        }
-
         .primary-action-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
-            color: white;
-            text-decoration: none;
-            padding: 18px 32px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
-            border: none;
-            cursor: pointer;
+            display: inline-block;
+            background: var(--theme-primary);
+            color: white; text-decoration: none; padding: 16px 30px; border-radius: 12px;
+            font-weight: 600; font-size: 1.1rem; transition: all 0.2s ease;
+            border: none; cursor: pointer;
         }
-
         .primary-action-btn:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 30px rgba(240, 146, 53, 0.4);
-            text-decoration: none;
-            color: white;
+            background: var(--theme-primary-dark);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
         }
 
-        .btn-icon {
-            font-size: 1.5rem;
-        }
-
-        .btn-text {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .btn-description {
-            font-size: 0.9rem;
-            opacity: 0.9;
-            font-weight: 400;
-        }
-
-        .no-records-benefits {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin-top: 40px;
-        }
-
-        .benefit-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .benefit-icon {
-            font-size: 2rem;
-        }
-
-        .benefit-text {
-            font-size: 0.9rem;
-            color: #64748b;
-            font-weight: 500;
-        }
+        .no-records-benefits { display: flex; justify-content: center; gap: 40px; margin-top: 40px; }
+        .benefit-item { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+        .benefit-icon { font-size: 2rem; color: var(--theme-primary); }
+        .benefit-text { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
 
         @media (max-width: 768px) {
-            .no-records-container {
-                padding: 40px 20px;
-            }
-
-            .no-records-title {
-                font-size: 1.8rem;
-            }
-
-            .no-records-benefits {
-                flex-direction: column;
-                gap: 20px;
-            }
-
-            .primary-action-btn {
-                flex-direction: column;
-                text-align: center;
-                padding: 16px 24px;
-            }
-
-            .btn-text, .btn-description {
-                font-size: 1rem;
-            }
+            body { padding: 10px; }
+            .container { margin: 10px auto; }
+            .content { padding: 20px; }
+            .no-records-benefits { flex-direction: column; gap: 20px; }
         }
     </style>
 </head>
@@ -462,14 +281,12 @@
         </div>
         
         <div class="content">
-            <!-- Step 1: Loading -->
             <div id="step-loading" class="step active">
                 <div class="loading">
                     Starting workflow and generating analysis...
                 </div>
             </div>
             
-            <!-- Step 2: Analysis & Career Question -->
             <div id="step-analysis" class="step">
                 <div class="analysis-box">
                     <div class="analysis-title">📊 Candidate Analysis</div>
@@ -492,7 +309,6 @@
                 </div>
             </div>
             
-            <!-- Step 3: Guidance & Jobs -->
             <div id="step-results" class="step">
                 <div class="guidance-box">
                     <div class="guidance-title">💡 Career Guidance</div>
@@ -519,7 +335,6 @@
                 </div>
             </div>
             
-            <!-- Error state -->
             <div id="step-error" class="step">
                 <div class="error">
                     <strong>⚠️ Error:</strong> <span id="error-message"></span>
@@ -537,7 +352,6 @@
             }
             
             getRecordIdFromUrl() {
-                // Extract record ID from URL or use default for testing
                 const urlParams = new URLSearchParams(window.location.search);
                 return urlParams.get('record_id') || 'a0N123456789012';
             }
@@ -563,13 +377,8 @@
             }
 
             showNoRecordsMessage(message) {
-                // Create a polished no records view
                 const content = document.querySelector('.content');
-
-                // Clear existing content
-                content.innerHTML = '';
-
-                // Create enhanced no records message
+                content.innerHTML = ''; // Clear existing content
                 const noRecordsDiv = document.createElement('div');
                 noRecordsDiv.innerHTML = `
                     <div class="no-records-container">
@@ -578,13 +387,9 @@
                         <div class="no-records-description">
                             ${message}
                         </div>
-                        <div class="no-records-actions">
-                           <a href="/new-workflow?record_id=${this.recordId}" class="primary-action-btn">
-                               <span class="btn-icon">🎤</span>
-                               <span class="btn-text">Start New Skill Workflow</span>
-                               <span class="btn-description">Get personalized career insights</span>
-                           </a>
-                       </div>
+                        <a href="/new-workflow?record_id=${this.recordId}" class="primary-action-btn">
+                            Start New Skill Workflow
+                        </a>
                         <div class="no-records-benefits">
                             <div class="benefit-item">
                                 <span class="benefit-icon">🤖</span>
@@ -592,16 +397,15 @@
                             </div>
                             <div class="benefit-item">
                                 <span class="benefit-icon">📊</span>
-                                <span class="benefit-text">Career recommendations</span>
+                                <span class="benefit-text">Job recommendations</span>
                             </div>
                             <div class="benefit-item">
-                                <span class="benefit-icon">🎯</span>
+                                <span class="benefit-icon">💡</span>
                                 <span class="benefit-text">Personalized guidance</span>
                             </div>
                         </div>
                     </div>
                 `;
-
                 content.appendChild(noRecordsDiv);
             }
             
@@ -609,9 +413,7 @@
                 try {
                     const response = await fetch(`/api/v1/opportunity-discussed/${this.recordId}/workflow/start`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
+                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({})
                     });
 
@@ -622,17 +424,14 @@
                     const data = await response.json();
                     this.workflowId = data.workflow_id;
 
-                    // Check if no records were found
                     if (this.workflowId === 'no-analysis-available') {
                         this.showNoRecordsMessage(data.message);
                         return;
                     }
 
-                    // Display analysis
                     document.getElementById('analysis-content').textContent = data.analysis;
                     document.getElementById('fit-gaps-content').textContent = data.fit_and_gaps;
 
-                    // Setup career path submission
                     document.getElementById('submit-career-path').addEventListener('click', () => {
                         this.submitCareerPath();
                     });
@@ -656,15 +455,10 @@
                 submitBtn.textContent = 'Processing...';
                 
                 try {
-                    // Step 2: Submit career path
                     const response = await fetch(`/api/v1/opportunity-discussed/workflow/${this.workflowId}/career-path`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            career_path: careerPath
-                        })
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ career_path: careerPath })
                     });
                     
                     if (!response.ok) {
@@ -673,15 +467,12 @@
                     
                     const guidanceData = await response.json();
                     
-                    // Display guidance
                     document.getElementById('guidance-content').textContent = guidanceData.data.career_guidance;
                     
-                    // Display fitness score if available
                     if (guidanceData.fitness_score) {
                         this.displayFitnessScore(guidanceData.fitness_score);
                     }
                     
-                    // Immediately complete workflow
                     await this.completeWorkflow();
                     
                 } catch (error) {
@@ -695,9 +486,7 @@
                 try {
                     const response = await fetch(`/api/v1/opportunity-discussed/workflow/${this.workflowId}/complete`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        }
+                        headers: { 'Content-Type': 'application/json' }
                     });
                     
                     if (!response.ok) {
@@ -706,7 +495,6 @@
                     
                     const finalData = await response.json();
                     
-                    // Display jobs
                     this.displayJobs(finalData.recommended_jobs);
                     this.showStep('step-results');
                     
@@ -749,26 +537,21 @@
                 const scoreText = document.getElementById('score-text');
                 const scoreReasoning = document.getElementById('score-reasoning');
                 
-                // Animate the progress bar
                 setTimeout(() => {
                     scoreBar.style.width = `${fitnessScore.score}%`;
                     scoreText.textContent = `${fitnessScore.score}%`;
                 }, 100);
                 
-                // Set the reasoning tooltip
                 scoreReasoning.textContent = fitnessScore.reasoning;
                 
-                // Show the fitness score container
                 const container = document.getElementById('fitness-score-container');
                 container.style.display = 'block';
             }
         }
         
-        // Initialize when page loads
         document.addEventListener('DOMContentLoaded', () => {
             new WorkflowManager();
         });
     </script>
 </body>
 </html>
-

@@ -4,193 +4,240 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Skill Interview - Interview Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            margin: 0;
-            padding: 20px;
-            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
-            min-height: 100vh;
+        /* --- Base Styles & Theme --- */
+        :root {
+            --theme-primary: linear-gradient(135deg, hsl(33 93% 54%) 0%, hsl(33 93% 54%) 100%); /* Main orange accent */
+            --theme-primary-dark: linear-gradient(135deg, hsl(33 93% 54%) 0%, hsl(33 93% 54%) 100%);
+            --text-header: #0a2342; /* Deep navy for text */
+            --text-body: #475569;
+            --text-muted: #64748b;
+            --bg-light: #f8f9fa; /* Light gray background */
+            --border-color: #e2e8f0;
         }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-body);
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        /* --- Layout & Main Container --- */
         .container {
             max-width: 900px;
-            margin: 0 auto;
+            margin: 20px auto;
             background: white;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            border: 1px solid var(--border-color);
             overflow: hidden;
         }
+        
         .header {
-            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
-            color: white;
+            background: #ffffff;
+            color: var(--text-header);
             padding: 30px;
             text-align: center;
+            border-bottom: 1px solid var(--border-color);
         }
+        
         .header h1 {
-            margin: 0;
-            font-size: 2.5em;
-            font-weight: 300;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 8px;
         }
+
         .header p {
-            margin: 10px 0 0 0;
-            opacity: 0.9;
-            font-size: 1.1em;
+            color: var(--text-muted);
+            font-size: 1.1rem;
         }
+        
         .content {
-            padding: 40px;
+            padding: 30px;
         }
-        .step {
-            display: none;
-            animation: fadeIn 0.5s ease-in;
+        
+        .content h2 {
+            color: var(--text-header);
+            margin-bottom: 8px;
         }
-        .step.active {
-            display: block;
+
+        /* --- Step Animation --- */
+        .step { display: none; animation: fadeIn 0.5s ease-in-out; }
+        .step.active { display: block; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
         }
+        
+        /* --- Chat Interface --- */
         .chat-container {
-            max-height: 500px;
+            max-height: 450px;
             overflow-y: auto;
-            border: 1px solid #e9ecef;
-            border-radius: 10px;
-            padding: 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 10px 20px;
             margin: 20px 0;
-            background: #f8f9fa;
+            background: var(--bg-light);
         }
         .message {
             margin: 15px 0;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 12px 18px;
+            border-radius: 18px;
             max-width: 80%;
+            line-height: 1.5;
         }
         .message.bot {
-            background: #e3f2fd;
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            color: var(--text-body);
             margin-right: auto;
-            border-bottom-left-radius: 5px;
+            border-bottom-left-radius: 4px;
         }
         .message.user {
-            background: #F09235;
+            background: var(--theme-primary);
             color: white;
             margin-left: auto;
-            text-align: right;
-            border-bottom-right-radius: 5px;
+            border-bottom-right-radius: 4px;
         }
-        .skills-list {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
+        
+        /* --- Components --- */
+        .skills-list, .transcript {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
         }
-        .skills-list h3 {
+        .skills-list h3, .transcript h3 {
             margin: 0 0 15px 0;
-            color: #333;
+            color: var(--text-header);
+            font-size: 1.2rem;
+            font-weight: 600;
         }
         .skill-tag {
             display: inline-block;
-            background: #F09235;
-            color: white;
-            padding: 5px 12px;
+            background: var(--bg-light);
+            color: var(--text-body);
+            border: 1px solid var(--border-color);
+            padding: 6px 14px;
             border-radius: 20px;
             margin: 5px;
             font-size: 14px;
+            font-weight: 500;
         }
+        
         .text-input {
             width: 100%;
             padding: 15px;
-            border: 2px solid #e9ecef;
+            border: 1px solid #d1d5db;
             border-radius: 8px;
             font-size: 16px;
             margin-top: 15px;
             resize: vertical;
             min-height: 80px;
+            transition: all 0.2s ease;
         }
         .text-input:focus {
             outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: var(--theme-primary);
+            box-shadow: 0 0 0 3px rgba(254, 80, 0, 0.15);
         }
+        
         .btn {
-            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
+            background-color: var(--theme-primary);
             color: white;
             border: none;
-            padding: 15px 30px;
-            border-radius: 25px;
+            padding: 12px 30px;
+            border-radius: 8px;
             cursor: pointer;
             font-size: 16px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            font-weight: 600;
+            transition: all 0.2s ease;
             margin-top: 20px;
         }
         .btn:hover {
-            box-shadow: 0 10px 20px rgba(240, 146, 53, 0.2);
+            background-color: var(--theme-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
         .btn:disabled {
-            opacity: 0.6;
+            background: #9ca3af;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
         }
+        
         .progress-bar {
             width: 100%;
-            height: 6px;
+            height: 8px;
             background: #e9ecef;
-            border-radius: 3px;
-            margin: 30px 0;
+            border-radius: 4px;
+            margin: 0 0 30px 0;
             overflow: hidden;
         }
         .progress-fill {
             height: 100%;
-            background: linear-gradient(135deg, #F09235 0%, #ff7d1a 100%);
+            background: var(--theme-primary);
             width: 0%;
             transition: width 0.5s ease;
+            border-radius: 4px;
         }
+        
         .transcript {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin: 20px 0;
             white-space: pre-wrap;
-            font-family: monospace;
+            font-family: 'Menlo', 'Consolas', monospace;
+            font-size: 14px;
             max-height: 400px;
             overflow-y: auto;
+            background-color: var(--bg-light);
         }
-        .transcript h3 {
-            margin: 0 0 15px 0;
-            color: #333;
-        }
-        .loading {
+        
+        .question-counter {
             text-align: center;
-            padding: 40px;
-            color: #666;
+            color: var(--text-muted);
+            margin: 10px 0;
+            font-size: 14px;
+            font-weight: 500;
         }
+        
+        /* --- Loading & Error --- */
+        .loading { text-align: center; padding: 40px; color: var(--text-muted); }
         .spinner {
             border: 4px solid #f3f3f3;
-            border-top: 4px solid #F09235;
+            border-top: 4px solid var(--theme-primary);
             border-radius: 50%;
             width: 40px;
             height: 40px;
             animation: spin 1s linear infinite;
             margin: 0 auto 20px;
         }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        
         .error {
-            background: #fee;
-            border: 1px solid #fcc;
-            color: #c33;
-            padding: 15px;
-            border-radius: 8px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: #dc2626;
+            padding: 20px;
+            border-radius: 10px;
             margin: 20px 0;
         }
-        .question-counter {
-            text-align: center;
-            color: #666;
-            margin: 10px 0;
-            font-size: 14px;
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { margin: 10px auto; }
+            .content { padding: 20px; }
         }
     </style>
 </head>
@@ -206,14 +253,12 @@
                 <div class="progress-fill" id="progress"></div>
             </div>
 
-            <!-- Step 1: Start Interview -->
             <div class="step active" id="step1">
                 <h2>Start Skill Interview</h2>
                 <p>Click the button below to begin the AI-powered skill interview. The system will analyze the candidate's resume and conduct an interactive interview.</p>
                 <button class="btn" onclick="startInterview()">Start Interview</button>
             </div>
 
-            <!-- Step 2: Skills Extraction -->
             <div class="step" id="step2">
                 <h2>Skills Analysis</h2>
                 <p>The AI has analyzed the candidate's resume and extracted the following key skills:</p>
@@ -224,13 +269,11 @@
                 <button class="btn" onclick="generateQuestions()">Generate Interview Questions</button>
             </div>
 
-            <!-- Step 3: Interview Chat -->
             <div class="step" id="step3">
                 <h2>Interactive Interview</h2>
                 <div class="question-counter" id="questionCounter">Question 1 of 7</div>
                 <div class="chat-container" id="chatContainer">
-                    <!-- Messages will be added here -->
-                </div>
+                    </div>
                 <textarea
                     class="text-input"
                     id="answerInput"
@@ -240,7 +283,6 @@
                 <button class="btn" id="submitAnswer" onclick="submitAnswer()" disabled>Submit Answer</button>
             </div>
 
-            <!-- Step 4: Complete Interview -->
             <div class="step" id="step4">
                 <h2>Interview Complete</h2>
                 <div class="transcript">
@@ -251,7 +293,6 @@
                 <button class="btn" onclick="resetInterview()">Start New Interview</button>
             </div>
 
-            <!-- Loading State -->
             <div class="step" id="loading">
                 <div class="loading">
                     <div class="spinner"></div>
@@ -259,12 +300,11 @@
                 </div>
             </div>
 
-            <!-- Error State -->
             <div class="step" id="error">
                 <div class="error">
-                    <h3>Error</h3>
+                    <h3>⚠️ An Error Occurred</h3>
                     <p id="errorMessage"></p>
-                    <button class="btn" onclick="showStep('step1')">Try Again</button>
+                    <button class="btn" onclick="resetInterview()">Try Again</button>
                 </div>
             </div>
         </div>
@@ -294,8 +334,13 @@
 
         function updateProgress() {
             const steps = ['step1', 'step2', 'step3', 'step4'];
-            const currentStep = steps.find(step => document.getElementById(step).classList.contains('active'));
-            const progress = steps.indexOf(currentStep) / (steps.length - 1) * 100;
+            const activeStep = document.querySelector('.step.active');
+            if (!activeStep) return;
+            const currentStepId = activeStep.id;
+            let progress = 0;
+            if (steps.includes(currentStepId)) {
+                progress = steps.indexOf(currentStepId) / (steps.length - 1) * 100;
+            }
             document.getElementById('progress').style.width = progress + '%';
         }
 
@@ -316,23 +361,15 @@
         async function startInterview() {
             try {
                 showLoading('Analyzing resume and extracting skills...');
-
                 const response = await fetch(`/api/v1/skill-interview/${currentRecordId}/start`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({}),
                 });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
                 currentInterviewId = data.interview_id;
-
-                // Display extracted skills
+                
                 const skillsContainer = document.getElementById('skillsContainer');
                 skillsContainer.innerHTML = '';
                 data.skills.forEach(skill => {
@@ -341,9 +378,7 @@
                     skillTag.textContent = skill;
                     skillsContainer.appendChild(skillTag);
                 });
-
                 showStep('step2');
-
             } catch (error) {
                 console.error('Error starting interview:', error);
                 showError('Failed to start interview: ' + error.message);
@@ -353,36 +388,24 @@
         async function generateQuestions() {
             try {
                 showLoading('Generating personalized interview questions...');
-
                 const response = await fetch(`/api/v1/skill-interview/${currentInterviewId}/generate-questions`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({}),
                 });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
 
-                // Clear chat and start interview
                 document.getElementById('chatContainer').innerHTML = '';
                 currentQuestionIndex = 0;
                 totalQuestions = data.questions.length;
-
-                // Add first question to chat
+                
                 addMessage(data.current_question, 'bot');
                 updateQuestionCounter();
-
-                // Enable answer input
+                
                 document.getElementById('answerInput').disabled = false;
                 document.getElementById('submitAnswer').disabled = false;
-
                 showStep('step3');
-
             } catch (error) {
                 console.error('Error generating questions:', error);
                 showError('Failed to generate questions: ' + error.message);
@@ -392,48 +415,47 @@
         async function submitAnswer() {
             const answerInput = document.getElementById('answerInput');
             const answer = answerInput.value.trim();
-
             if (!answer) {
                 alert('Please provide an answer before submitting.');
                 return;
             }
+            
+            addMessage(answer, 'user');
+            answerInput.value = '';
+            answerInput.disabled = true;
+            document.getElementById('submitAnswer').disabled = true;
+
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'message bot';
+            typingIndicator.innerHTML = '<span>. . .</span>';
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.appendChild(typingIndicator);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
 
             try {
-                // Add user answer to chat
-                addMessage(answer, 'user');
-
-                showLoading('Processing your answer...');
-
                 const response = await fetch(`/api/v1/skill-interview/${currentInterviewId}/answer`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(answer),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ answer: answer }), // Sending as JSON object
                 });
 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
+                chatContainer.removeChild(typingIndicator);
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                 const data = await response.json();
 
                 if (data.completed) {
-                    // Interview completed
                     document.getElementById('finalTranscript').textContent = data.transcript;
                     showStep('step4');
                 } else {
-                    // Next question
                     addMessage(data.next_question, 'bot');
                     currentQuestionIndex = data.question_number - 1;
                     updateQuestionCounter();
-
-                    // Clear input for next answer
-                    answerInput.value = '';
-                    showStep('step3');
+                    answerInput.disabled = false;
+                    document.getElementById('submitAnswer').disabled = false;
+                    answerInput.focus();
                 }
-
             } catch (error) {
+                chatContainer.removeChild(typingIndicator);
                 console.error('Error submitting answer:', error);
                 showError('Failed to submit answer: ' + error.message);
             }
@@ -459,10 +481,12 @@
             document.getElementById('submitAnswer').disabled = true;
             showStep('step1');
         }
-
-        // Initialize
-        updateProgress();
-        document.getElementById('answerInput').disabled = true;
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            updateProgress();
+            document.getElementById('answerInput').disabled = true;
+            document.getElementById('submitAnswer').disabled = true;
+        });
     </script>
 </body>
 </html>
