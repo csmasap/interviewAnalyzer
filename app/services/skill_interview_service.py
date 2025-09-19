@@ -200,7 +200,7 @@ class SkillInterviewService:
                     {"role": "system", "content": "You are a skilled recruiter who identifies key candidate skills."},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.3,
+                #temperature=0.3,
             )
 
             content = response.choices[0].message.content or ""

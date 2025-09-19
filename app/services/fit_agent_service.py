@@ -56,7 +56,7 @@ class OpenAIFitAgentService:
                 {"role": "system", "content": "You produce precise, actionable job fit and gap analyses."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.3,
+            #temperature=0.3,
         )
         message = resp.choices[0].message
         return message.content or ""

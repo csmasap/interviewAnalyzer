@@ -74,7 +74,7 @@ async def _generate_fitness_score(
                 {"role": "system", "content": "You provide precise numerical assessments with clear reasoning."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.3,
+            #temperature=0.3,
         )
 
         content = resp.choices[0].message.content or ""
@@ -550,7 +550,7 @@ async def submit_career_path(
                 {"role": "system", "content": "You are a precise, actionable career advisor."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.4,
+            #temperature=0.4,
         )
         guidance = resp.choices[0].message.content or ""
 

@@ -259,7 +259,7 @@ class InterviewService:
                     {"role": "system", "content": "You are a precise recruiter who generates relevant interview questions."},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.3,
+                #temperature=0.3,
             )
             
             content = response.choices[0].message.content or ""
@@ -332,7 +332,7 @@ class InterviewService:
                     {"role": "system", "content": "You are a skilled interviewer who asks insightful follow-up questions."},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.4,
+                #temperature=0.4,
             )
             
             content = response.choices[0].message.content or ""
@@ -404,7 +404,7 @@ class InterviewService:
                     {"role": "system", "content": "You are a professional recruiter who writes clear, objective interview summaries."},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.3,
+                #temperature=0.3,
             )
             
             content = response.choices[0].message.content or ""

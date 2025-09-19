@@ -47,7 +47,7 @@ class CareerWorkflowService:
                 {"role": "system", "content": "You are a precise, actionable career advisor."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.4,
+            #temperature=0.4,
         )
         return resp.choices[0].message.content or ""
 

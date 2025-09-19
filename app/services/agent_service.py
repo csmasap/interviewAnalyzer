@@ -53,7 +53,7 @@ class OpenAIAgentService:
                 {"role": "system", "content": "You are a precise, structured recruiting analyst."},
                 {"role": "user", "content": prompt},
             ],
-            temperature=0.4,
+            #temperature=0.4,
         )
         message = resp.choices[0].message
         return message.content or ""

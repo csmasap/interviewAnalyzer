@@ -46,7 +46,7 @@ class JobAnalyzerService:
                     {"role": "system", "content": "You are an expert interviewer who creates insightful, role-specific interview questions."},
                     {"role": "user", "content": prompt},
                 ],
-                temperature=0.7,  # Slightly higher for creativity in question generation
+                #temperature=0.7,  # Slightly higher for creativity in question generation
             )
             
             content = resp.choices[0].message.content or ""
