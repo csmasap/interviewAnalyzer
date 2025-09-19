@@ -4,17 +4,8 @@ import logging
 from typing import Dict
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
-from fastapi.templating import Jinja2Templates
 
 from app.api.routers import api_router
-from app.core.config import get_settings
-from app.core.logging_config import configure_logging
-from app.deps import get_salesforce_client
-
-
-configure_logging("INFO")
-logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Interview Analyzer API",
@@ -22,6 +13,18 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc",
 )
+app.include_router(api_router)
+
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+
+from app.core.config import get_settings
+from app.core.logging_config import configure_logging
+from app.deps import get_salesforce_client
+
+
+configure_logging("INFO")
+logger = logging.getLogger(__name__)
 
 templates = Jinja2Templates(directory="app/templates")
 
@@ -120,6 +123,3 @@ async def skill_interview_ui(request: Request, record_id: str = "003123456789012
         "request": request,
         "record_id": record_id
     })
-
-
-app.include_router(api_router)
