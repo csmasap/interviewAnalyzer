@@ -14,7 +14,15 @@ async def sample_jobs(request: Request, record_id: str):
     sf_client = SalesforceClient(settings)
     contact = sf_client.query_contact_by_id(record_id)
     resume_txt = contact.get("Candidate_s_Resume_TXT__c") if contact else None
-    jobs = await get_sample_jobs(resume_txt)
+
+    opportunities = contact.get("TR1__Opportunities_Discussed__r")
+    if opportunities and opportunities.get("records"):
+        # Get the first related opportunity record
+        first_opportunity = opportunities["records"][0]
+        ai_summary = first_opportunity.get("AI_Interview_Summary__c", "")
+        screening_transcript = first_opportunity.get("Screening_Transcript__c", "")
+    
+    jobs = await get_sample_jobs(resume_txt, ai_summary, screening_transcript)
     
     return templates.TemplateResponse(
         "sample_jobs.html",

@@ -109,7 +109,7 @@ class SalesforceClient:
         """Returns the raw Salesforce Contact record or None if not found."""
         contact_id = _sanitize_salesforce_id(contact_id)
         soql = (
-            "SELECT Id, Name, Email, Candidate_s_Resume_TXT__c "
+            "SELECT Id, Name, Email, Candidate_s_Resume_TXT__c, (SELECT AI_Interview_Summary__c, Screening_Transcript__c FROM TR1__Opportunities_Discussed__r WHERE TR1__Job__r.Id = 'a0WPM0000045Kjl2AE')"
             "FROM Contact WHERE Id = '{}'".format(contact_id)
         )
         logger.info("SOQL query for Contact: %s", soql)

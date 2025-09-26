@@ -3,18 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sample Jobs</title>
+    <title>Sample Jobs - Interview Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Base Styles & Theme --- */
+        :root {
+            --theme-primary: #fe5000; /* Main orange accent */
+            --theme-primary-dark: #e94a00;
+            --text-header: #0a2342; /* Deep navy for text */
+            --text-body: #475569;
+            --text-muted: #64748b;
+            --bg-light: #f8f9fa; /* Light gray background */
+            --border-color: #e2e8f0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-body);
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .page-header h1 {
+            color: var(--text-header);
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        /* --- Job Grid Layout --- */
+        .jobs-grid {
+            list-style-type: none;
+            padding: 0;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        /* --- Job Card Styling --- */
+        .job-card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            transition: all 0.2s ease;
+        }
+        .job-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+            border-color: var(--theme-primary);
+        }
+
+        .job-card h2 {
+            color: var(--text-header);
+            font-size: 1.25rem;
+            margin-bottom: 8px;
+        }
+
+        .job-card p {
+            color: var(--text-muted);
+            margin-bottom: 20px;
+            flex-grow: 1; /* Pushes the button to the bottom */
+        }
+        
+        .job-card a {
+            display: inline-block;
+            text-align: center;
+            background-color: var(--theme-primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            margin-top: auto; /* Aligns button to the bottom */
+        }
+
+        .job-card a:hover {
+            background-color: var(--theme-primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
 </head>
 <body>
-    <h1>Sample Job Postings</h1>
-    <ul>
-        {% for job in jobs %}
-            <li>
-                <h2>{{ job.title }}</h2>
-                <p>Company: {{ job.company }}</p>
-                <a href="{{ job.link }}">Apply Now</a>
-            </li>
-        {% endfor %}
-    </ul>
+    <div class="container">
+        <div class="page-header">
+            <h1>Sample Job Postings</h1>
+        </div>
+
+        <ul class="jobs-grid">
+            {% for job in jobs %}
+                <li class="job-card">
+                    <h2>{{ job.title }}</h2>
+                    <p>Company: {{ job.company }}</p>
+                    <a href="{{ job.link }}" target="_blank" rel="noopener noreferrer">Apply Now</a>
+                </li>
+            {% endfor %}
+        </ul>
+    </div>
 </body>
 </html>
