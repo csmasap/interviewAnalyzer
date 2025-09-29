@@ -118,6 +118,22 @@ SALESFORCE_DOMAIN=login  # or 'test' for sandbox
 OPENAI_API_KEY=your-openai-api-key  # Required for interview service
 ```
 
+### Submodules
+- This repo includes `THEIA-Job-Seekers` as a Git submodule at `external/THEIA-Job-Seekers`.
+- Clone with submodules:
+```bash
+git clone --recurse-submodules <this-repo-url>
+```
+- If you already cloned, initialize submodules:
+```bash
+git submodule update --init --recursive
+```
+- To update submodules to latest remote (optional):
+```bash
+git submodule update --remote --recursive
+```
+- Deploys on Render initialize submodules automatically via the build command in `render.yaml`.
+
 ### Run locally
 ```powershell
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
