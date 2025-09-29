@@ -1,0 +1,3 @@
+[submodule "external/THEIA-Job-Seekers"]
+	path = external/THEIA-Job-Seekers
+	url = https://github.com/luisl-asapjobs/THEIA-Job-Seekers
