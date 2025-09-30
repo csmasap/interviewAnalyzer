@@ -145,13 +145,14 @@ async def _run_single_scrape(search_term: str, location: str, country_code: str)
     logger.info(f"🚀 Performing single scrape with AI-generated query in '{location}'")
     logger.info(f"Query: {search_term}")
     try:
+        # Prefer extracted location when available; fallback to 'united states'
+        normalized_location = (location or '').strip() or 'united states'
         jobs_df = await asyncio.to_thread(
             scrape_jobs,
             site_name=["linkedin", "indeed"],
             search_term=search_term,
-            #location=location,
-            location='united states',
-            results_wanted=10,  # 👈 Fetching 10 positions as requested
+            location=normalized_location,
+            results_wanted=10,
             hours_old=168,
             country_indeed=country_code
         )

@@ -4,6 +4,7 @@ import logging
 from typing import Dict
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routers import api_router
 
@@ -14,6 +15,19 @@ app = FastAPI(
     redoc_url="/redoc",
 )
 app.include_router(api_router)
+
+# CORS: allow THEIA frontend during local dev and typical prod origins
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "https://localhost:3000",
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
+)
 
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
