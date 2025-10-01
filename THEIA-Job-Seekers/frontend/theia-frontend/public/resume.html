@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THEIA Resume Builder</title>
+    <link rel="icon" href="THEIA-logo-gold.png" type="image/png">
+    <link rel="shortcut icon" href="THEIA-logo-gold.png" type="image/png">
+    <link rel="apple-touch-icon" href="THEIA-logo-gold.png">
+    <link rel="stylesheet" href="styles/theme.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a href="home.html" title="Go to THEIA Home"><img src="public/THEIA-logo.png" alt="THEIA logo" class="brand-logo"></a>
+            <div class="brand-center">
+                <div class="brand__title">THEIA</div>
+                <div class="brand__subtitle">Show your value. Get the job</div>
+            </div>
+            <img src="public/user-icon.svg" alt="User avatar" class="avatar" id="avatarBtn">
+        </div>
+    </header>
+    <div class="container" style="margin-top: var(--header-content-spacing);">
+        <div class="header">
+            <h1>📄 THEIA Resume Builder</h1>
+            <p>AI-powered resume optimization system</p>
+            <div class="status-indicator" id="statusIndicator">
+                🔍 Checking backend...
+            </div>
+        </div>
+
+        <div id="resumeForm">
+            <form id="theiaResumeForm">
+                <div class="form-section">
+                    <h2>📋 Job Information</h2>
+                    <p>Enter the job details to build a tailored resume that increases your matching with ATS systems</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="companyName">🏢 Company Name *</label>
+                    <input type="text" id="companyName" name="companyName" placeholder="e.g., Google, Microsoft, Apple..." required class="form-input" />
+                </div>
+
+                <div class="form-group">
+                    <label for="jobTitle">💼 Job Title *</label>
+                    <input type="text" id="jobTitle" name="jobTitle" placeholder="e.g., Software Engineer, Product Manager..." required class="form-input" />
+                </div>
+
+                <div class="form-group">
+                    <label for="jobDescription">📝 Full Job Description *</label>
+                    <textarea id="jobDescription" name="jobDescription" placeholder="Paste the complete job description here including requirements, responsibilities, and qualifications..." required class="form-textarea" rows="12"></textarea>
+                    <small class="form-help">💡 Include the full job posting for better resume optimization</small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="submitBtn" class="btn">🚀 Build my resume</button>
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+            </form>
+        </div>
+
+        <div id="loadingScreen" class="loading">
+            <div class="spinner"></div>
+            <h2><img src="isa_portrait.png" alt="ISA" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px;"/> THEIA is building your resume...</h2>
+            <p id="loadingMessage">Analyzing job requirements and optimizing your resume...</p>
+        </div>
+
+        <!-- Progress Modal -->
+        <div id="progressModal" class="modal-overlay" style="display: none;">
+            <div class="modal progress-modal">
+                <div class="modal-header" style="text-align: center; border-bottom: none; margin-bottom: 30px;">
+                    <h2 style="margin: 0; color: #2d3748;"><img src="isa_portrait.png" alt="ISA" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px;"/> THEIA is Building Your Resume</h2>
+                    <p style="margin: 8px 0 0; color: #718096; font-size: 14px;">This usually takes 60-90 seconds</p>
+                </div>
+                <div class="overall-progress" style="margin-bottom: 30px;">
+                    <div class="progress-bar" style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                        <div id="overallProgressFill" style="height: 100%; background: linear-gradient(135deg, var(--orange-500), var(--orange-600)); border-radius: 4px; width: 0%; transition: width 0.8s ease;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                        <span id="progressPercent" style="font-size: 12px; color: #718096;">0%</span>
+                        <span id="progressTimer" style="font-size: 12px; color: #718096;">00:00</span>
+                    </div>
+                </div>
+                <div class="progress-steps">
+                    <div id="step-fetch" class="progress-step" style="display: flex; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s ease;">
+                        <div class="step-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; background: #e2e8f0; color: #718096; font-size: 18px;">📄</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h4 style="margin: 0 0 4px; color: #2d3748; font-size: 14px; font-weight: 600;">Data Collection</h4>
+                            <p style="margin: 0; color: #718096; font-size: 12px;">Retrieving your resume and interview history</p>
+                        </div>
+                        <div class="step-status" style="width: 20px; height: 20px; margin-left: 12px;">
+                            <div class="spinner-small" style="display: none; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top: 2px solid var(--orange-500); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <div class="checkmark" style="display: none; color: #38a169; font-size: 16px;">✓</div>
+                        </div>
+                    </div>
+                    <div id="step-analyze" class="progress-step" style="display: flex; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s ease;">
+                        <div class="step-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; background: #e2e8f0; color: #718096; font-size: 18px;">🔍</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h4 style="margin: 0 0 4px; color: #2d3748; font-size: 14px; font-weight: 600;">Job Analysis</h4>
+                            <p style="margin: 0; color: #718096; font-size: 12px;">Understanding job requirements and keywords</p>
+                        </div>
+                        <div class="step-status" style="width: 20px; height: 20px; margin-left: 12px;">
+                            <div class="spinner-small" style="display: none; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top: 2px solid var(--orange-500); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <div class="checkmark" style="display: none; color: #38a169; font-size: 16px;">✓</div>
+                        </div>
+                    </div>
+                    <div id="step-optimize" class="progress-step" style="display: flex; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s ease;">
+                        <div class="step-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; background: #e2e8f0; color: #718096; font-size: 18px;">⚡</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h4 style="margin: 0 0 4px; color: #2d3748; font-size: 14px; font-weight: 600;">Resume Optimization</h4>
+                            <p style="margin: 0; color: #718096; font-size: 12px;">Tailoring your experience to match the role</p>
+                        </div>
+                        <div class="step-status" style="width: 20px; height: 20px; margin-left: 12px;">
+                            <div class="spinner-small" style="display: none; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top: 2px solid var(--orange-500); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <div class="checkmark" style="display: none; color: #38a169; font-size: 16px;">✓</div>
+                        </div>
+                    </div>
+                    <div id="step-generate" class="progress-step" style="display: flex; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s ease;">
+                        <div class="step-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; background: #e2e8f0; color: #718096; font-size: 18px;">📝</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h4 style="margin: 0 0 4px; color: #2d3748; font-size: 14px; font-weight: 600;">Resume Generation</h4>
+                            <p style="margin: 0; color: #718096; font-size: 12px;">Creating your optimized resume</p>
+                        </div>
+                        <div class="step-status" style="width: 20px; height: 20px; margin-left: 12px;">
+                            <div class="spinner-small" style="display: none; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top: 2px solid var(--orange-500); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <div class="checkmark" style="display: none; color: #38a169; font-size: 16px;">✓</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="current-activity" style="margin-top: 30px; text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <p id="currentActivityText" style="margin: 0; color: #4a5568; font-size: 14px; font-weight: 500;">Initializing THEIA Resume Builder...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resume Display Modal -->
+        <div id="resumeModal" class="modal-overlay" style="display: none;">
+            <div class="modal resume-modal" style="max-width: 800px; width: 90%; max-height: 90vh; overflow-y: auto;">
+                <div class="modal-header">
+                    <h3>📄 Your Optimized Resume</h3>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="copyResumeBtn" class="btn" style="min-width:auto; padding:6px 12px;">📋 Copy</button>
+                        <button id="downloadResumeBtn" class="btn" style="min-width:auto; padding:6px 12px;">💾 Download DOCX</button>
+                        <button id="closeResumeModal" class="btn" style="min-width:auto; padding:6px 12px;">Close</button>
+                    </div>
+                </div>
+                
+                <div class="resume-content" style="padding: 20px; background: #f9fafb; border-radius: 8px; margin-bottom: 20px;">
+                    <div id="resumeDisplay" style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); font-family: 'Times New Roman', serif; line-height: 1.6; color: #2d3748;">
+                        <!-- Resume content will be inserted here -->
+                    </div>
+                </div>
+                
+                <div class="resume-stats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px;">
+                    <div class="stat-card" style="background: #f7fafc; padding: 16px; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0 0 8px; color: #2d3748;">Keywords Matched</h4>
+                        <p id="keywordCount" style="font-size: 24px; font-weight: bold; color: #38a169; margin: 0;">--</p>
+                    </div>
+                    <div class="stat-card" style="background: #f7fafc; padding: 16px; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0 0 8px; color: #2d3748;">ATS Score</h4>
+                        <p id="atsScore" style="font-size: 24px; font-weight: bold; color: #3182ce; margin: 0;">--</p>
+                    </div>
+                    <div class="stat-card" style="background: #f7fafc; padding: 16px; border-radius: 8px; text-align: center;">
+                        <h4 style="margin: 0 0 8px; color: #2d3748;">Match Percentage</h4>
+                        <p id="matchPercentage" style="font-size: 24px; font-weight: bold; color: #d69e2e; margin: 0;">--</p>
+                    </div>
+                </div>
+                
+                <div class="optimization-notes" style="background: #edf2f7; padding: 16px; border-radius: 8px;">
+                    <h4 style="margin: 0 0 12px; color: #2d3748;">💡 Optimization Notes</h4>
+                    <div id="optimizationNotes" style="color: #4a5568;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function resolveApiBase(){
+            try {
+                const url = new URL(window.location.href);
+                const override = url.searchParams.get('api');
+                if (override){
+                    const clean = override.replace(/\/$/, '');
+                    try { localStorage.setItem('THEIA_API_BASE', clean); } catch(_){ }
+                    return clean;
+                }
+            } catch(_) {}
+            const saved = (function(){ try { return localStorage.getItem('THEIA_API_BASE'); } catch(_) { return null; } })();
+            if (saved) return saved.replace(/\/$/, '');
+            return '';
+        }
+        let API_BASE = resolveApiBase();
+        async function loadApiBase(){
+            if (API_BASE && API_BASE.startsWith('http')) return;
+            try {
+                let apiBasePath = 'api-base.txt';
+                if (window.location.hostname === 'storage.googleapis.com') {
+                    const parts = window.location.pathname.split('/');
+                    if (parts.length > 1 && parts[1]) apiBasePath = `/${parts[1]}/api-base.txt`;
+                }
+                const resp = await fetch(apiBasePath, { cache: 'no-store' });
+                if (resp.ok){
+                    const text = (await resp.text()).trim();
+                    if (text && text.startsWith('http')){
+                        API_BASE = text.replace(/\/$/, '');
+                        try { localStorage.setItem('THEIA_API_BASE', API_BASE); } catch(_){ }
+                    } else {
+                        throw new Error('Invalid API base URL in api-base.txt');
+                    }
+                } else {
+                    throw new Error(`Failed to fetch api-base.txt: ${resp.status}`);
+                }
+            } catch(e) {
+                console.error('Failed to load API base URL:', e);
+                API_BASE = 'https://theia-backend-v2-603965392227.us-central1.run.app';
+            }
+        }
+        function isAuthenticated(){
+            const token = localStorage.getItem('THEIA_TOKEN');
+            const cid = localStorage.getItem('THEIA_CONTACT_ID');
+            return Boolean(token && cid);
+        }
+        function authHeaders(){ const t = localStorage.getItem('THEIA_TOKEN') || ''; return t ? { 'Authorization': `Bearer ${t}` } : {}; }
+
+        async function handleSubmit(event){
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const resumeRequest = {
+                user_id: localStorage.getItem('THEIA_CONTACT_ID') || '',
+                company_name: formData.get('companyName'),
+                job_title: formData.get('jobTitle'),
+                job_description: formData.get('jobDescription')
+            };
+            document.getElementById('resumeForm').style.display = 'none';
+            showProgressModal();
+            try {
+                await loadApiBase();
+                const response = await fetch(`${API_BASE}/api/v1/resume/build`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeaders() }, body: JSON.stringify(resumeRequest)
+                });
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                const result = await response.json();
+                hideProgressModal();
+                displayResume(result);
+            } catch (error) {
+                hideProgressModal();
+                document.getElementById('resumeForm').style.display = 'block';
+                const errorDiv = document.getElementById('errorMessage');
+                errorDiv.textContent = `Error: ${error.message}. Please make sure the backend is running.`;
+                errorDiv.style.display = 'block';
+            }
+        }
+
+        // Minimal progress modal functions
+        function showProgressModal(){ document.getElementById('progressModal').style.display = 'flex'; }
+        function hideProgressModal(){ document.getElementById('progressModal').style.display = 'none'; }
+        function displayResume(result){ const modal=document.getElementById('resumeModal'); const display=document.getElementById('resumeDisplay'); const keywordCount=document.getElementById('keywordCount'); const atsScore=document.getElementById('atsScore'); const matchPercentage=document.getElementById('matchPercentage'); const optimizationNotes=document.getElementById('optimizationNotes'); display.innerHTML=result.resume_html||`<pre style="white-space: pre-wrap; font-family: inherit;">${result.resume_text||'No resume generated'}</pre>`; keywordCount.textContent=result.keywords_matched||'--'; atsScore.textContent=result.ats_score||'--'; matchPercentage.textContent=result.match_percentage?`${result.match_percentage}%`:'--'; if(result.optimization_notes&&result.optimization_notes.length>0){ optimizationNotes.innerHTML=result.optimization_notes.map(n=>`<p style="margin: 8px 0;">• ${n}</p>`).join(''); } else { optimizationNotes.innerHTML='<p style="margin: 8px 0; color: #718096;">No specific optimization notes provided.</p>'; } window.currentResume=result; modal.style.display='flex'; }
+
+        document.addEventListener('DOMContentLoaded', function(){
+            // Relaxed guard: allow access even if unauthenticated
+            // (Optionally you can prompt sign-in UI instead of redirecting)
+            document.getElementById('theiaResumeForm').addEventListener('submit', handleSubmit);
+        });
+    </script>
+</body>
+</html>
+
+

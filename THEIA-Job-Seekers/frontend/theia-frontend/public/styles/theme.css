@@ -1,0 +1,414 @@
+/* THEIA basic theme (restored) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --gray-50: #F9FAFB;
+  --gray-100: #EFF0F2;
+  --gray-200: #E4E5E8;
+  --gray-500: #8E939E;
+  --gray-900: #1B1C20;
+  --orange-500: #F09235;
+  --orange-600: #E6841A;
+  --border-radius-md: 8px;
+  --shadow-lg: 0 10px 15px -3px rgba(0,0,0,.1), 0 4px 6px -4px rgba(0,0,0,.1);
+  --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px; --space-6: 24px; --space-8: 32px;
+  
+  /* Header spacing - reduced by 55% from original 100px to 45px */
+  --header-content-spacing: 45px;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
+  background: var(--gray-50);
+  color: var(--gray-900);
+  line-height: 1.6;
+}
+
+.site-header {
+  position: sticky; top: 0; z-index: 10;
+  background: linear-gradient(135deg, var(--orange-500), var(--orange-600));
+  color: #fff; box-shadow: var(--shadow-lg);
+}
+.site-header__inner { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: grid; grid-template-columns: 120px 1fr 44px; align-items: center; }
+.brand-logo { height: 64px; width: auto; display: block; }
+.brand-center { text-align: center; }
+.brand__title { font-size: 1.5rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
+.brand__subtitle { font-size: 0.9rem; font-weight: 400; color: rgba(255,255,255,0.9); }
+.avatar { height: 44px; width: 44px; border-radius: 50%; background: #fff; object-fit: cover; }
+
+.container { max-width: 1100px; margin: 32px auto; background: #fff; border-radius: var(--border-radius-md); padding: var(--space-8); box-shadow: var(--shadow-lg); }
+.header h1 { margin: 0 0 var(--space-2); }
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-5); }
+.info-item { background: #fff; border: 1px solid var(--gray-200); border-radius: var(--border-radius-md); padding: var(--space-4); }
+
+.form-input, .form-textarea, .form-select { width: 100%; padding: var(--space-3) var(--space-4); border: 2px solid var(--gray-200); border-radius: var(--border-radius-md); }
+.btn { display:inline-flex; align-items:center; justify-content:center; padding: var(--space-3) var(--space-6); border:none; border-radius: var(--border-radius-md); background: linear-gradient(135deg, var(--orange-500), var(--orange-600)); color:#fff; font-weight:600; }
+
+.profile-modal { position: fixed; inset: 0; background: rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:1000; }
+.profile-content { width:92%; max-width:560px; background:#fff; border-radius:14px; box-shadow: var(--shadow-lg); padding:20px; }
+
+/* Profile Modal Button Layout */
+.profile-buttons { 
+  margin-top: 24px; 
+  display: flex; 
+  flex-wrap: wrap; 
+  gap: 12px; 
+  align-items: center;
+}
+
+.profile-buttons-left { 
+  display: flex; 
+  gap: 12px; 
+  flex: 1; 
+  min-width: 0;
+}
+
+.profile-buttons .btn {
+  padding: var(--space-3) var(--space-4);
+  min-width: 80px;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+/* Responsive button layout */
+@media (max-width: 640px) {
+  .profile-buttons { 
+    flex-direction: column; 
+    align-items: stretch;
+  }
+  
+  .profile-buttons-left { 
+    flex-direction: column; 
+    width: 100%;
+  }
+  
+  .profile-buttons .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-content {
+    width: 95%;
+    padding: 16px;
+  }
+  
+  .profile-buttons .btn {
+    padding: var(--space-2) var(--space-3);
+    font-size: 13px;
+  }
+}
+
+/* Voice Modal Styles */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.5); display:none; align-items:center; justify-content:center; z-index:1001; }
+.modal { width:92%; max-width:480px; background:#fff; border-radius:14px; box-shadow: var(--shadow-lg); padding:24px; }
+.modal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+
+/* Text Interview Modal - Clean Design */
+.text-interview-modal { 
+  width: 95%; 
+  max-width: 800px; 
+  max-height: 90vh; 
+  background: #fff; 
+  border-radius: 14px; 
+  box-shadow: var(--shadow-lg); 
+  padding: 24px;
+  overflow-y: auto;
+}
+
+/* Loading Screen Styles */
+.loading { position: fixed; inset: 0; background: rgba(0,0,0,.8); color:#fff; display:none; align-items:center; justify-content:center; flex-direction:column; z-index:1000; }
+.loading.show { display: flex; }
+.spinner-large { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,.3); border-top: 4px solid #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Additional styles for React integration */
+.form-section { margin-bottom: 30px; text-align: center; }
+.form-section h2 { font-size: 1.5rem; color: var(--gray-900); margin-bottom: 8px; }
+.form-section p { color: var(--gray-500); font-size: 1rem; }
+.form-group { margin-bottom: 25px; }
+.info-section { margin-top: 40px; }
+.info-section h3 { color: var(--gray-900); margin-bottom: 16px; font-size: 1.2rem; }
+
+/* Form actions */
+.form-actions {
+  margin: 40px 0;
+  text-align: center;
+}
+
+/* Spinner for button */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 8px;
+}
+
+/* Form label styling */
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--gray-900);
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+/* Form help text */
+.form-group small {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.875rem;
+  color: var(--gray-500);
+}
+
+/* Status indicator styles */
+.status-indicator {
+  margin-top: 15px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.status-checking {
+  background: #fef5e7;
+  color: #d69e2e;
+  border: 1px solid #f6e05e;
+}
+
+.status-ready {
+  background: #f0fff4;
+  color: #38a169;
+  border: 1px solid #9ae6b4;
+}
+
+.status-partial {
+  background: #fffaf0;
+  color: #dd6b20;
+  border: 1px solid #fbd38d;
+}
+
+.status-error {
+  background: #fed7d7;
+  color: #e53e3e;
+  border: 1px solid #feb2b2;
+}
+
+/* Button hover effects */
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(240, 146, 53, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Success message styles */
+.success-message {
+  text-align: center;
+  padding: 20px;
+}
+
+.success-message h1 {
+  color: var(--gray-900);
+  margin-bottom: 20px;
+  font-size: 2rem;
+}
+
+.success-message p {
+  color: var(--gray-500);
+  font-size: 1.1rem;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+.interview-details, .next-steps {
+  background: var(--gray-50);
+  border-radius: var(--border-radius-md);
+  padding: 20px;
+  margin: 30px 0;
+  text-align: left;
+}
+
+.interview-details h3, .next-steps h3 {
+  color: var(--gray-900);
+  margin-bottom: 12px;
+}
+
+.interview-details p {
+  color: var(--gray-900);
+  margin-bottom: 8px;
+  font-size: 1rem;
+}
+
+.next-steps ul {
+  color: var(--gray-900);
+  padding-left: 20px;
+}
+
+.next-steps li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+/* Mic Visualizer */
+.mic-visual { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--orange-500), var(--orange-600)); display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; }
+.mic-visual::before { content: '🎤'; font-size: 24px; }
+@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.1); } }
+
+/* Text Interview Modal Styles */
+.text-interview-modal { 
+  width: 95%; 
+  max-width: 700px; 
+  max-height: 90vh; 
+  overflow: hidden; 
+  display: flex; 
+  flex-direction: column; 
+}
+
+.chat-message {
+  display: flex;
+  margin-bottom: 16px;
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.chat-message.interviewer {
+  justify-content: flex-start;
+}
+
+.chat-message.candidate {
+  justify-content: flex-end;
+}
+
+.message-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.message-bubble.interviewer {
+  background: #f0f0f0;
+  color: #2d3748;
+  border-bottom-left-radius: 6px;
+}
+
+.message-bubble.candidate {
+  background: linear-gradient(135deg, var(--orange-500), var(--orange-600));
+  color: white;
+  border-bottom-right-radius: 6px;
+}
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+.message-avatar.interviewer {
+  background: linear-gradient(135deg, var(--orange-500), var(--orange-600));
+  color: white;
+}
+
+.message-avatar.candidate {
+  background: #e2e8f0;
+  color: #4a5568;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Progress Bar Animation */
+.progress-bar div {
+  transition: width 0.5s ease-in-out;
+}
+
+/* Button Hover Effects */
+.modal-actions .btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+.modal-actions .btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Progress Modal Styles */
+.progress-modal {
+  width: 95%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.progress-step {
+  transition: all 0.3s ease;
+}
+
+.progress-step.active {
+  background: #f0fff4;
+  border: 1px solid #c6f6d5;
+}
+
+.progress-step.active .step-icon {
+  background: linear-gradient(135deg, var(--orange-500), var(--orange-600));
+  color: white;
+}
+
+.progress-step.completed {
+  background: #f0fff4;
+  border: 1px solid #c6f6d5;
+}
+
+.progress-step.completed .step-icon {
+  background: #38a169;
+  color: white;
+}
+
+.spinner-small {
+  animation: spin 1s linear infinite;
+}
+
+/* Progress animations */
+@keyframes progressPulse {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(240, 146, 53, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 10px rgba(240, 146, 53, 0);
+  }
+}
+
+.progress-step.active .step-icon {
+  animation: progressPulse 2s infinite;
+}
+
+

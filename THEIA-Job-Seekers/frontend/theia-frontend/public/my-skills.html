@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THEIA • My Skills</title>
+  <link rel="icon" href="THEIA-logo.png" type="image/png">
+  <link rel="shortcut icon" href="THEIA-logo.png" type="image/png">
+  <link rel="apple-touch-icon" href="THEIA-logo.png">
+  <link rel="stylesheet" href="styles/theme.css">
+  <script>
+    function resolveApiBase(){
+      try { const url = new URL(window.location.href); const override = url.searchParams.get('api'); if (override){ const clean = override.replace(/\/$/, ''); try{ localStorage.setItem('THEIA_API_BASE', clean);}catch(_){} return clean; } } catch(_) {}
+      const saved = (function(){ try { return localStorage.getItem('THEIA_API_BASE'); } catch(_) { return null; } })();
+      if (saved) return saved.replace(/\/$/, '');
+      return '';
+    }
+    let API_BASE = resolveApiBase();
+    async function loadApiBase(){
+      if (API_BASE && API_BASE.startsWith('http')) return;
+      try {
+        let apiBasePath = 'api-base.txt';
+        if (window.location.hostname === 'storage.googleapis.com'){
+          const parts = window.location.pathname.split('/');
+          if (parts.length > 1 && parts[1]) apiBasePath = `/${parts[1]}/api-base.txt`;
+        }
+        const resp = await fetch(apiBasePath, { cache: 'no-store' });
+        if (!resp.ok) throw new Error('api-base.txt not found');
+        const text = (await resp.text()).trim();
+        if (text && text.startsWith('http')){
+          API_BASE = text.replace(/\/$/, '');
+          try{ localStorage.setItem('THEIA_API_BASE', API_BASE);}catch(_){ }
+        }
+      } catch(e){
+        API_BASE = 'https://theia-backend-v2-603965392227.us-central1.run.app';
+      }
+    }
+    function authHeaders(){
+      const t = localStorage.getItem('THEIA_TOKEN') || '';
+      return t ? { 'Authorization': `Bearer ${t}` } : {};
+    }
+    async function fetchSkills(){
+      await loadApiBase();
+      const contactId = localStorage.getItem('THEIA_CONTACT_ID') || '';
+      const url = contactId ? `${API_BASE}/api/v1/skills?contact_id=${encodeURIComponent(contactId)}` : `${API_BASE}/api/v1/skills`;
+      const resp = await fetch(url, { headers: { ...authHeaders() } });
+      if (!resp.ok){ return []; }
+      const data = await resp.json();
+      return Array.isArray(data && data.skills) ? data.skills : [];
+    }
+    function renderSkills(skills){
+      const grid = document.getElementById('skillsGrid');
+      grid.innerHTML = '';
+      if (!skills.length){
+        grid.innerHTML = '<div class="card" style="text-align:center;color:var(--gray-600)">No skills found yet. Complete an interview to populate your skills.</div>';
+        return;
+      }
+      skills.forEach((s) => {
+        const name = (s.name || '').toString();
+        const score = Math.max(1, Math.min(10, Number(s.score || 0)));
+        const wrap = document.createElement('div');
+        wrap.className = 'skill-row';
+        wrap.innerHTML = `
+          <div class="skill-name" title="${name}">${name}</div>
+          <div>
+            <div class="bar-wrap"><div class="bar" style="width:${score*10}%"></div></div>
+          </div>
+          <div class="score">${score}/10</div>
+        `;
+        grid.appendChild(wrap);
+      });
+    }
+    async function init(){
+      const list = await fetchSkills();
+      renderSkills(list);
+    }
+    document.addEventListener('DOMContentLoaded', init);
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a href="home.html"><img src="public/THEIA-logo.png" alt="THEIA logo" class="brand-logo"></a>
+      <div class="brand-center">
+        <div class="brand__title">THEIA</div>
+        <div class="brand__subtitle">Show your value. Get the job</div>
+      </div>
+      <img src="public/user-icon.svg" alt="User avatar" class="avatar" id="avatarBtn">
+    </div>
+  </header>
+  <main class="skills-container">
+    <section class="card skills-header">
+      <h1 style="margin:0 0 var(--space-2); color: var(--gray-900);">My Skills</h1>
+      <p style="margin:0;color:var(--gray-600)">A consolidated view of your most recently evaluated skills from your THEIA Interviews and Opportunities Discussed.</p>
+    </section>
+    <section class="card">
+      <div class="skills-grid" id="skillsGrid"></div>
+      <div class="legend">
+        <span><span class="swatch"></span>Skill score (1–10)</span>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
+
+

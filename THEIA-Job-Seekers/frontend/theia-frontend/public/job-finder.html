@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THEIA • Job Finder</title>
+  <link rel="icon" href="THEIA-logo-gold.png" type="image/png">
+  <link rel="shortcut icon" href="THEIA-logo-gold.png" type="image/png">
+  <link rel="apple-touch-icon" href="THEIA-logo-gold.png">
+  <link rel="stylesheet" href="styles/theme.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a href="home.html"><img src="public/THEIA-logo.png" alt="THEIA logo" class="brand-logo"></a>
+      <div class="brand-center">
+        <div class="brand__title">THEIA</div>
+        <div class="brand__subtitle">Show your value. Get the job</div>
+      </div>
+      <a href="home.html" class="btn">Home</a>
+    </div>
+  </header>
+
+  <main style="max-width:1000px; margin: var(--header-content-spacing) auto var(--space-8); padding: 0 var(--space-4);">
+    <section class="header" style="margin-bottom: var(--space-6);">
+      <h1>🔎 Job Finder</h1>
+      <p>Search jobs via your Interview Analyzer backend using either the Heuristic JobSpy path or the AI-assisted path.</p>
+    </section>
+
+    <section class="cards" style="grid-template-columns: 1fr; gap: var(--space-6);">
+      <div class="card-modern">
+        <div class="card-icon">🧭</div>
+        <h3 class="card-title">Heuristic JobSpy</h3>
+        <p class="card-desc">Use an OpportunityDiscussed record to infer a title and search parameters. You can override defaults below.</p>
+        <form id="heuristicForm" class="form-grid">
+          <div class="form-group">
+            <label>OpportunityDiscussed Id (15–18 chars)</label>
+            <input id="oppId" class="form-input" placeholder="a0N..." required />
+          </div>
+          <div class="form-group">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+              <input id="useAi" type="checkbox" checked />
+              Use AI to build Boolean query (resume + interview)
+            </label>
+          </div>
+          <div class="form-group">
+            <label>Search term (optional)</label>
+            <input id="searchTerm" class="form-input" placeholder="Senior Data Scientist" />
+          </div>
+          <div class="form-group">
+            <label>Location (optional)</label>
+            <input id="location" class="form-input" placeholder="Seattle" />
+          </div>
+          <div class="form-group">
+            <label>Results wanted (1–200)</label>
+            <input id="resultsWanted" class="form-input" type="number" min="1" max="200" placeholder="20" />
+          </div>
+          <div class="form-group">
+            <label>Hours old (1–720)</label>
+            <input id="hoursOld" class="form-input" type="number" min="1" max="720" placeholder="72" />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn">Fetch Jobs</button>
+          </div>
+        </form>
+        <div id="heuristicResults" style="margin-top: var(--space-4);"></div>
+      </div>
+
+      <div class="card-modern">
+        <div class="card-icon">🤖</div>
+        <h3 class="card-title">AI-assisted Sample Jobs</h3>
+        <p class="card-desc">Use a Contact Id; the backend extracts skills with Gemini and runs a targeted JobSpy search.</p>
+        <form id="aiForm" class="form-grid">
+          <div class="form-group">
+            <label>Contact Id (003...)</label>
+            <input id="contactId" class="form-input" placeholder="003..." required />
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn">Open Sample Jobs Page</button>
+          </div>
+        </form>
+        <div class="note" style="color: var(--gray-500); font-size: 14px;">Tip: Use the JSON endpoint if you prefer inline rendering.</div>
+        <div class="inline-actions" style="margin-top: var(--space-2);">
+          <button id="aiJsonBtn" class="btn" style="background:#E4E5E8; color:#1B1C20;">Fetch JSON Inline</button>
+        </div>
+        <div id="aiResults" style="margin-top: var(--space-4);"></div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    function getParam(name){ try { return new URL(window.location.href).searchParams.get(name); } catch(_) { return null; } }
+    function safeSetLS(key, val){ try { localStorage.setItem(key, val); } catch(_){} }
+    function safeGetLS(key){ try { return localStorage.getItem(key); } catch(_) { return null; } }
+
+    function resolveApiBase(){
+      const fromParam = getParam('jobs_api');
+      if (fromParam) { safeSetLS('THEIA_JOBS_API_BASE', fromParam.replace(/\/$/, '')); return fromParam.replace(/\/$/, ''); }
+      const saved = safeGetLS('THEIA_JOBS_API_BASE');
+      if (saved) return saved.replace(/\/$/, '');
+      return '';
+    }
+
+    async function loadApiBase(){
+      let base = resolveApiBase();
+      if (base && base.startsWith('http')) return base;
+      try {
+        const resp = await fetch('jobs-api-base.txt', { cache: 'no-store' });
+        if (resp.ok) {
+          const text = (await resp.text()).trim();
+          if (text && text.startsWith('http')) { safeSetLS('THEIA_JOBS_API_BASE', text.replace(/\/$/, '')); return text.replace(/\/$/, ''); }
+        }
+      } catch(_){ }
+      return '';
+    }
+
+    function renderJobs(container, jobs){
+      if (!jobs || !jobs.length) { container.innerHTML = '<p>No jobs found.</p>'; return; }
+      const html = jobs.map(j => (
+        `<div class="info-item" style="padding:12px 0; border-bottom:1px solid var(--gray-200);">
+           <div><strong>${j.title || ''}</strong> — ${j.company || ''}</div>
+           <div style="color:var(--gray-600);">${j.location || ''}</div>
+           <div><a href="${j.link || j.job_url || '#'}" target="_blank" rel="noopener">Open ↗</a></div>
+         </div>`
+      )).join('');
+      container.innerHTML = html;
+    }
+
+    document.getElementById('heuristicForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const base = await loadApiBase();
+      if (!base) { alert('Jobs API base URL not configured'); return; }
+      const rid = document.getElementById('oppId').value.trim();
+      const useAi = document.getElementById('useAi').checked;
+      const searchTerm = document.getElementById('searchTerm').value.trim();
+      const location = document.getElementById('location').value.trim();
+      const resultsWanted = document.getElementById('resultsWanted').value.trim();
+      const hoursOld = document.getElementById('hoursOld').value.trim();
+
+      const params = new URLSearchParams();
+      if (useAi) params.append('use_ai_query', 'true');
+      if (searchTerm) params.append('search_term', searchTerm);
+      if (location) params.append('location', location);
+      if (resultsWanted) params.append('results_wanted', resultsWanted);
+      if (hoursOld) params.append('hours_old', hoursOld);
+
+      const url = `${base}/api/v1/opportunity-discussed/${encodeURIComponent(rid)}/jobs?${params.toString()}`;
+      const out = document.getElementById('heuristicResults');
+      out.innerHTML = '<div class="spinner"></div> Fetching jobs...';
+      try {
+        const resp = await fetch(url, { mode: 'cors' });
+        const data = await resp.json();
+        renderJobs(out, data);
+      } catch (err) {
+        out.innerHTML = `<p style="color:#b91c1c">Failed: ${err?.message || err}</p>`;
+      }
+    });
+
+    document.getElementById('aiForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const base = await loadApiBase();
+      if (!base) { alert('Jobs API base URL not configured'); return; }
+      const cid = document.getElementById('contactId').value.trim();
+      const url = `${base}/api/v1/sample-jobs?record_id=${encodeURIComponent(cid)}`;
+      window.open(url, '_blank');
+    });
+
+    document.getElementById('aiJsonBtn').addEventListener('click', async () => {
+      const base = await loadApiBase();
+      if (!base) { alert('Jobs API base URL not configured'); return; }
+      const cid = document.getElementById('contactId').value.trim();
+      if (!cid) { alert('Enter Contact Id first'); return; }
+      const url = `${base}/api/v1/sample-jobs.json?record_id=${encodeURIComponent(cid)}`;
+      const out = document.getElementById('aiResults');
+      out.innerHTML = '<div class="spinner"></div> Fetching jobs...';
+      try {
+        const resp = await fetch(url, { mode: 'cors' });
+        const data = await resp.json();
+        renderJobs(out, data);
+      } catch (err) {
+        out.innerHTML = `<p style="color:#b91c1c">Failed: ${err?.message || err}</p>`;
+      }
+    });
+  </script>
+</body>
+</html>
+
+

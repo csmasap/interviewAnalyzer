@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THEIA Interview Prep</title>
+    <link rel="icon" href="THEIA-logo-gold.png" type="image/png">
+    <link rel="shortcut icon" href="THEIA-logo-gold.png" type="image/png">
+    <link rel="apple-touch-icon" href="THEIA-logo-gold.png">
+    <link rel="stylesheet" href="styles/theme.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-header__inner">
+            <a href="home.html" title="Go to THEIA Home"><img src="public/THEIA-logo.png" alt="THEIA logo" class="brand-logo"></a>
+            <div class="brand-center">
+                <div class="brand__title">THEIA</div>
+                <div class="brand__subtitle">Show your value. Get the job</div>
+            </div>
+            <img src="public/user-icon.svg" alt="User avatar" class="avatar" id="avatarBtn">
+        </div>
+    </header>
+    <div class="container" style="margin-top: var(--header-content-spacing);">
+        <div class="header">
+            <h1>THEIA Interview Prep</h1>
+            <p>AI-powered interview preparation system</p>
+            <div class="status-indicator" id="statusIndicator">
+                🔍 Checking backend...
+            </div>
+        </div>
+
+        <div id="interviewForm">
+            <form id="theiaForm">
+                <div class="form-section">
+                    <h2>Interview Setup</h2>
+                    <p>Enter the job details to start your personalized interview preparation</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="companyName">Company Name *</nlabel>
+                    <input
+                        type="text"
+                        id="companyName"
+                        name="companyName"
+                        placeholder="e.g., Google, Microsoft, Apple..."
+                        required
+                        class="form-input"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="jobTitle">Job Title (Optional)</label>
+                    <input
+                        type="text"
+                        id="jobTitle"
+                        name="jobTitle"
+                        placeholder="e.g., Software Engineer, Product Manager..."
+                        class="form-input"
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="jobDescription">Full Job Description *</label>
+                    <textarea
+                        id="jobDescription"
+                        name="jobDescription"
+                        placeholder="Paste the complete job description here including requirements, responsibilities, and qualifications..."
+                        required
+                        class="form-textarea"
+                        rows="12"
+                    ></textarea>
+                    <small class="form-help">
+                        Include the full job posting for better question generation
+                    </small>
+                </div>
+
+                
+
+                <div class="form-group">
+                    <label for="interviewMode">Interview Mode</label>
+                    <select id="interviewMode" name="interviewMode" class="form-select">
+                        <option value="text">💬 Text Interview (Chat-based)</option>
+                        <option value="voice">Voice Interview (Real-time voice)</option>
+                    </select>
+                    <small class="form-help">
+                        Choose how you'd like to practice your interview
+                    </small>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" id="submitBtn" class="btn">
+                        🚀 Start Interview Preparation
+                    </button>
+                </div>
+
+                <div id="errorMessage" class="error-message" style="display: none;"></div>
+            </form>
+        </div>
+
+        <div id="loadingScreen" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <h2>THEIA is preparing your interview...</h2>
+            <p id="loadingMessage">Analyzing job requirements and company research...</p>
+        </div>
+
+        <div id="successScreen" class="success-message" style="display: none;">
+            <h1>🎉 Interview Preparation Complete!</h1>
+            <p>THEIA has analyzed the job requirements and prepared your personalized interview.</p>
+            <div id="interviewDetails"></div>
+            <div id="questionsContainer" style="text-align:left; margin-top: 20px;"></div>
+            <div class="form-actions">
+                <button id="submitAnswersBtn" class="btn" style="display:none;">📤 Submit Answers</button>
+            </div>
+
+            <div id="summariesContainer" style="text-align:left; margin-top: 24px;"></div>
+        </div>
+
+        <!-- Voice modal -->
+        <div id="voiceModal" class="modal-overlay" style="display: none;">
+            <div class="modal">
+                <div class="modal-header">
+                    <h3>ISA_Voice Interview</h3>
+                    <button id="closeVoiceModal" class="btn" style="min-width:auto; padding:6px 10px;">Close</button>
+                </div>
+                <div style="display:flex; align-items:center; gap:16px;">
+                    <div class="mic-visual"></div>
+                    <div>
+                        <p style="color:#4a5568">Connecting to voice agent...</p>
+                        <small id="voiceStatus" style="color:#718096">Preparing session</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <!-- Progress Modal -->
+        <div id="progressModal" class="modal-overlay" style="display: none;">
+            <div class="modal progress-modal">
+                <div class="modal-header" style="text-align: center; border-bottom: none; margin-bottom: 30px;">
+                    <h2 style="margin: 0; color: #2d3748;"><img src="isa_portrait.png" alt="ISA" style="width: 24px; height: 24px; border-radius: 50%; vertical-align: middle; margin-right: 8px;"/> THEIA is Preparing Your Interview</h2>
+                    <p style="margin: 8px 0 0; color: #718096; font-size: 14px;">This usually takes 60-90 seconds</p>
+                </div>
+                
+                <!-- Overall Progress Bar -->
+                <div class="overall-progress" style="margin-bottom: 30px;">
+                    <div class="progress-bar" style="width: 100%; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                        <div id="overallProgressFill" style="height: 100%; background: linear-gradient(135deg, var(--orange-500), var(--orange-600)); border-radius: 4px; width: 0%; transition: width 0.8s ease;"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                        <span id="progressPercent" style="font-size: 12px; color: #718096;">0%</span>
+                        <span id="progressTimer" style="font-size: 12px; color: #718096;">00:00</span>
+                    </div>
+                </div>
+
+                <!-- Progress Steps -->
+                <div class="progress-steps">
+                    <div id="step-analysis" class="progress-step" style="display: flex; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s ease;">
+                        <div class="step-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; background: #e2e8f0; color: #718096; font-size: 18px;">🔍</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h4 style="margin: 0 0 4px; color: #2d3748; font-size: 14px; font-weight: 600;">Company & Skills Analysis</h4>
+                            <p style="margin: 0; color: #718096; font-size: 12px;">Researching company practices and analyzing job requirements</p>
+                        </div>
+                        <div class="step-status" style="width: 20px; height: 20px; margin-left: 12px;">
+                            <div class="spinner-small" style="display: none; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top: 2px solid var(--orange-500); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <div class="checkmark" style="display: none; color: #38a169; font-size: 16px;">✓</div>
+                        </div>
+                    </div>
+
+                    <div id="step-questions" class="progress-step" style="display: flex; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s ease;">
+                        <div class="step-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; background: #e2e8f0; color: #718096; font-size: 18px;">❓</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h4 style="margin: 0 0 4px; color: #2d3748; font-size: 14px; font-weight: 600;">Question Generation</h4>
+                            <p style="margin: 0; color: #718096; font-size: 12px;">Creating personalized interview questions</p>
+                        </div>
+                        <div class="step-status" style="width: 20px; height: 20px; margin-left: 12px;">
+                            <div class="spinner-small" style="display: none; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top: 2px solid var(--orange-500); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <div class="checkmark" style="display: none; color: #38a169; font-size: 16px;">✓</div>
+                        </div>
+                    </div>
+
+                    <div id="step-evaluation" class="progress-step" style="display: flex; align-items: center; padding: 12px; border-radius: 8px; margin-bottom: 12px; transition: all 0.3s ease;">
+                        <div class="step-icon" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 16px; background: #e2e8f0; color: #718096; font-size: 18px;">📊</div>
+                        <div class="step-content" style="flex: 1;">
+                            <h4 style="margin: 0 0 4px; color: #2d3748; font-size: 14px; font-weight: 600;">Evaluation Setup</h4>
+                            <p style="margin: 0; color: #718096; font-size: 12px;">Preparing feedback and scoring criteria</p>
+                        </div>
+                        <div class="step-status" style="width: 20px; height: 20px; margin-left: 12px;">
+                            <div class="spinner-small" style="display: none; width: 16px; height: 16px; border: 2px solid #e2e8f0; border-top: 2px solid var(--orange-500); border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <div class="checkmark" style="display: none; color: #38a169; font-size: 16px;">✓</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Activity -->
+                <div class="current-activity" style="margin-top: 30px; text-align: center; padding: 16px; background: #f7fafc; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <p id="currentActivityText" style="margin: 0; color: #4a5568; font-size: 14px; font-weight: 500;">Initializing THEIA systems...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Text Interview modal -->
+        <div id="textModal" class="modal-overlay" style="display: none;">
+            <div class="modal text-interview-modal">
+                <div class="modal-header">
+                    <h3>💬 Text Interview</h3>
+                    <button id="closeTextModal" class="btn" style="min-width:auto; padding:6px 10px;">Close</button>
+                </div>
+                
+                <!-- Interview Progress -->
+                <div class="interview-progress" style="margin-bottom: 20px;">
+                    <div class="progress-info" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <span id="questionCounter" style="font-size: 14px; color: #718096;">Question 1 of 10</span>
+                        <span id="interviewTimer" style="font-size: 14px; color: #718096;">00:00</span>
+                    </div>
+                    <div class="progress-bar" style="width: 100%; height: 4px; background: #e2e8f0; border-radius: 2px;">
+                        <div id="progressFill" style="height: 100%; background: linear-gradient(135deg, var(--orange-500), var(--orange-600)); border-radius: 2px; width: 10%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+
+                <!-- Interview Content -->
+                <div class="interview-content" style="height: 400px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin-bottom: 16px; background: #f9fafb;">
+                    <!-- Chat Messages Container -->
+                    <div id="chatMessages" style="display: flex; flex-direction: column; gap: 16px;">
+                        <!-- Messages will be dynamically added here -->
+                    </div>
+                </div>
+
+                <!-- Answer Input Area -->
+                <div class="answer-input-area" style="margin-bottom: 16px;">
+                    <textarea 
+                        id="currentAnswer" 
+                        placeholder="Type your answer here..." 
+                        style="width: 100%; min-height: 80px; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; resize: vertical; font-family: inherit;"
+                        rows="3"
+                    ></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                        <small style="color: #718096;">Press Ctrl+Enter to submit</small>
+                        <span id="charCount" style="font-size: 12px; color: #a0aec0;">0 characters</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="modal-actions" style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button id="submitAnswer" class="btn">Submit</button>
+                </div>
+            </div>
+        </div>
+
+
+        
+    </div>
+
+    <div id="profileModal" class="profile-modal" style="display:none; position:fixed; inset:0; background: rgba(0,0,0,.5); align-items:center; justify-content:center; z-index:1000;">
+        <div class="profile-content" style="width:92%; max-width:560px; background:#fff; border-radius:14px; box-shadow: var(--shadow-lg); padding:20px;">
+            <h3 style="margin: 0 0 8px;">Your Profile</h3>
+            <form id="profileForm">
+                <div class="form-group"><label>First Name</label><input id="pf_first" class="form-input" /></div>
+                <div class="form-group"><label>Last Name</label><input id="pf_last" class="form-input" /></div>
+                <div class="form-group"><label>Email</label><input id="pf_email" class="form-input" type="email" disabled /></div>
+                <div class="form-group"><label>Phone</label><input id="pf_phone" class="form-input" /></div>
+                <div class="form-group"><label>LinkedIn</label><input id="pf_linkedin" class="form-input" placeholder="https://linkedin.com/in/..." /></div>
+                <div class="form-group"><label>Zip Code</label><input id="pf_zip" class="form-input" /></div>
+                <div class="profile-buttons">
+                    <div class="profile-buttons-left">
+                        <button type="submit" class="btn">Save</button>
+                        <button type="button" id="pf_cancel" class="btn" style="background:#E4E5E8; color:#1B1C20;">Cancel</button>
+                    </div>
+                    <button type="button" id="pf_signout" class="btn" style="background:#E4E5E8; color:#1B1C20;">Sign Out</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // THEIA Frontend JavaScript for interview page
+        function resolveApiBase() {
+            try {
+                const url = new URL(window.location.href);
+                const override = url.searchParams.get('api');
+                if (override) {
+                    const clean = override.replace(/\/$/, '');
+                    localStorage.setItem('THEIA_API_BASE', clean);
+                    return clean;
+                }
+            } catch (_) {}
+            const saved = localStorage.getItem('THEIA_API_BASE');
+            if (saved) return saved.replace(/\/$/, '');
+            return '';
+        }
+        let API_BASE = resolveApiBase();
+
+        // Production-safe discovery: load api-base.txt from the bucket (required for production)
+        async function loadApiBase() {
+            // Skip if already configured via URL parameter or localStorage
+            if (API_BASE && API_BASE.startsWith('http')) {
+                console.log('✅ API_BASE already configured:', API_BASE);
+                return;
+            }
+            
+            try {
+                // Determine the correct path for api-base.txt based on current location
+                let apiBasePath = 'api-base.txt';
+                if (window.location.hostname === 'storage.googleapis.com') {
+                    // We're on Google Cloud Storage - use full bucket path
+                    const pathParts = window.location.pathname.split('/');
+                    if (pathParts.length > 1 && pathParts[1]) {
+                        // Use bucket name from current path
+                        apiBasePath = `/${pathParts[1]}/api-base.txt`;
+                    }
+                }
+                
+                console.log('Loading API base from:', apiBasePath);
+                const resp = await fetch(apiBasePath, { cache: 'no-store' });
+                if (resp.ok) {
+                    const text = (await resp.text()).trim();
+                    if (text && text.startsWith('http')) {
+                        API_BASE = text.replace(/\/$/, '');
+                        console.log('✅ API_BASE loaded from api-base.txt:', API_BASE);
+                        // Save to localStorage for future use
+                        try {
+                            localStorage.setItem('THEIA_API_BASE', API_BASE);
+                        } catch(_) {}
+                    } else {
+                        throw new Error('Invalid API base URL in api-base.txt');
+                    }
+                } else {
+                    throw new Error(`Failed to fetch api-base.txt: ${resp.status}`);
+                }
+            } catch(e) {
+                console.error('❌ CRITICAL: Failed to load API base URL:', e);
+                // Fallback to hardcoded production URL if api-base.txt fails
+                API_BASE = 'https://theia-backend-v2-603965392227.us-central1.run.app';
+                console.log('🔄 Using fallback API_BASE:', API_BASE);
+            }
+        }
+        
+        (function(){
+            const root = document.documentElement;
+            const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+            const onScroll = () => {
+                const p = clamp(window.scrollY / 80, 0, 1);
+                root.style.setProperty('--header-progress', String(p));
+            };
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        })();
+
+        function authHeaders(){
+            const t = localStorage.getItem('THEIA_TOKEN') || '';
+            return t ? { 'Authorization': `Bearer ${t}` } : {};
+        }
+
+        async function prefillProfile(){
+            try {
+                const cid = localStorage.getItem('THEIA_CONTACT_ID') || '';
+                await loadApiBase();
+                const url = cid ? `${API_BASE}/api/v1/auth/profile?contact_id=${encodeURIComponent(cid)}` : `${API_BASE}/api/v1/auth/profile`;
+                const resp = await fetch(url, { headers: { ...authHeaders() } });
+                if (resp.ok) {
+                const p = await resp.json();
+                document.getElementById('pf_first').value = p.first_name || '';
+                document.getElementById('pf_last').value = p.last_name || '';
+                document.getElementById('pf_email').value = p.email || '';
+                document.getElementById('pf_phone').value = p.phone || '';
+                document.getElementById('pf_linkedin').value = p.linkedin || '';
+                document.getElementById('pf_zip').value = p.zip_code || '';
+                    return;
+                }
+            } catch(_) {}
+            // Fallback to Auth0-derived info stored at login
+            document.getElementById('pf_first').value = localStorage.getItem('THEIA_AUTH_FIRST') || '';
+            document.getElementById('pf_last').value = localStorage.getItem('THEIA_AUTH_LAST') || '';
+            document.getElementById('pf_email').value = localStorage.getItem('THEIA_AUTH_EMAIL') || '';
+        }
+        document.getElementById('avatarBtn').addEventListener('click', async () => {
+            await prefillProfile();
+            document.getElementById('profileModal').style.display = 'flex';
+        });
+        document.getElementById('pf_cancel').addEventListener('click', () => {
+            document.getElementById('profileModal').style.display = 'none';
+        });
+        document.getElementById('pf_signout').addEventListener('click', () => {
+            // Clear all stored tokens and user data
+            localStorage.removeItem('THEIA_TOKEN');
+            localStorage.removeItem('THEIA_CONTACT_ID');
+            localStorage.removeItem('THEIA_EMAIL');
+            localStorage.removeItem('THEIA_AUTH0_AT');
+            localStorage.removeItem('THEIA_AUTH_FIRST');
+            localStorage.removeItem('THEIA_AUTH_LAST');
+            localStorage.removeItem('THEIA_AUTH_EMAIL');
+            localStorage.removeItem('THEIA_API_BASE');
+            
+            // Redirect to login page
+            window.location.href = 'landing.html';
+        });
+        document.getElementById('profileForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payload = {
+                first_name: document.getElementById('pf_first').value.trim() || null,
+                last_name: document.getElementById('pf_last').value.trim() || null,
+                email: document.getElementById('pf_email').value.trim() || null,
+                phone: document.getElementById('pf_phone').value.trim() || null,
+                linkedin: document.getElementById('pf_linkedin').value.trim() || null,
+                zip_code: document.getElementById('pf_zip').value.trim() || null,
+            };
+            try {
+                const resp = await fetch(`${API_BASE}/api/v1/auth/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                    body: JSON.stringify(payload)
+                });
+                const data = await resp.json();
+                if (!resp.ok) throw new Error(data && data.detail || 'Update failed');
+                document.getElementById('profileModal').style.display = 'none';
+                alert('Profile updated');
+            } catch (e) {
+                alert('Profile update failed: ' + e.message);
+            }
+        });
+
+        // Check backend status on page load
+        async function checkBackendStatus() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            if (!statusIndicator) return;
+            try {
+                await loadApiBase();
+                const response = await fetch(`${API_BASE}/test/credentials`, { headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate' } });
+                const data = await response.json();
+                const workingServices = Object.values(data.services || {}).filter(service => service.status.includes('WORKING')).length;
+                const totalServices = Object.keys(data.services || {}).length;
+                const allWorking = workingServices === totalServices;
+                if (allWorking) {
+                    statusIndicator.textContent = '✅ All systems ready';
+                    statusIndicator.style.background = '#f0fff4';
+                    statusIndicator.style.color = '#38a169';
+                } else {
+                    statusIndicator.textContent = '⚠️ Some services need configuration';
+                    statusIndicator.style.background = '#fffaf0';
+                    statusIndicator.style.color = '#dd6b20';
+                }
+            } catch (error) {
+                statusIndicator.textContent = '❌ Backend not available';
+                statusIndicator.style.background = '#fed7d7';
+                statusIndicator.style.color = '#e53e3e';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            checkBackendStatus();
+        });
+
+        // ------------------------
+        // Text Interview: Wiring
+        // ------------------------
+        let CURRENT_SESSION_ID = null;
+        let CURRENT_TOTAL_QUESTIONS = 10;
+        let CURRENT_Q_INDEX = 0;
+
+        function show(elId){ const el = document.getElementById(elId); if (el) el.style.display = 'block'; }
+        function hide(elId){ const el = document.getElementById(elId); if (el) el.style.display = 'none'; }
+
+        function appendChatMessage(role, text){
+            const container = document.getElementById('chatMessages');
+            if (!container) return;
+            const bubble = document.createElement('div');
+            bubble.style.maxWidth = '75%';
+            bubble.style.padding = '10px 12px';
+            bubble.style.borderRadius = '10px';
+            bubble.style.whiteSpace = 'pre-wrap';
+            bubble.style.alignSelf = role === 'ai' ? 'flex-start' : 'flex-end';
+            bubble.style.background = role === 'ai' ? '#EDF2F7' : '#FFECD1';
+            bubble.style.color = '#1A202C';
+            bubble.textContent = text;
+            container.appendChild(bubble);
+            // Always bring the latest message into view
+            try {
+                bubble.scrollIntoView({ behavior: 'smooth', block: 'end' });
+            } catch(_) {
+                container.scrollTop = container.scrollHeight;
+            }
+            // Keep the input focused for fast typing
+            const box = document.getElementById('currentAnswer');
+            if (box) box.focus();
+        }
+
+        function updateQuestionCounter(){
+            const counter = document.getElementById('questionCounter');
+            const fill = document.getElementById('progressFill');
+            const n = Math.min(CURRENT_Q_INDEX + 1, CURRENT_TOTAL_QUESTIONS);
+            if (counter) counter.textContent = `Question ${n} of ${CURRENT_TOTAL_QUESTIONS}`;
+            if (fill) fill.style.width = `${Math.round((CURRENT_Q_INDEX / Math.max(1, CURRENT_TOTAL_QUESTIONS)) * 100)}%`;
+        }
+
+        async function startInterviewSession(payload){
+            await loadApiBase();
+            const resp = await fetch(`${API_BASE}/api/v1/interviews/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data && (data.message || data.detail) || 'Failed to start session');
+            return data.session_id;
+        }
+
+        async function generateQuestions(sessionId, payload){
+            await loadApiBase();
+            const resp = await fetch(`${API_BASE}/api/v1/interviews/${encodeURIComponent(sessionId)}/generate_questions`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data && (data.message || data.detail) || 'Failed to generate questions');
+            CURRENT_TOTAL_QUESTIONS = data.count || 10;
+            return data;
+        }
+
+        async function getNextQuestion(sessionId){
+            await loadApiBase();
+            const resp = await fetch(`${API_BASE}/api/v1/interviews/${encodeURIComponent(sessionId)}/answer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                body: JSON.stringify({})
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data && (data.message || data.detail) || 'Failed to fetch next question');
+            return data;
+        }
+
+        async function submitAnswer(sessionId, answer){
+            await loadApiBase();
+            const resp = await fetch(`${API_BASE}/api/v1/interviews/${encodeURIComponent(sessionId)}/answer`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', ...authHeaders() },
+                body: JSON.stringify({ answer })
+            });
+            const data = await resp.json();
+            if (!resp.ok) throw new Error(data && (data.message || data.detail) || 'Failed to submit answer');
+            return data;
+        }
+
+        function openTextModal(){
+            document.getElementById('textModal').style.display = 'flex';
+            updateQuestionCounter();
+        }
+
+        // Form submit → start session → generate questions → open chat and show first question
+        document.getElementById('theiaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hide('errorMessage');
+            const companyName = document.getElementById('companyName').value.trim();
+            const jobTitle = document.getElementById('jobTitle').value.trim();
+            const jobDescription = document.getElementById('jobDescription').value.trim();
+            const interviewMode = document.getElementById('interviewMode').value || 'text';
+            if (!jobDescription){
+                const err = document.getElementById('errorMessage');
+                if (err){ err.textContent = 'Please include the full job description.'; err.style.display = 'block'; }
+                return;
+            }
+            try {
+                show('progressModal');
+                CURRENT_Q_INDEX = 0;
+                CURRENT_TOTAL_QUESTIONS = 10;
+                // 1) Start session
+                CURRENT_SESSION_ID = await startInterviewSession({
+                    company_name: companyName,
+                    job_title: jobTitle,
+                    job_description: jobDescription,
+                    interview_mode: interviewMode
+                });
+                // 2) Generate questions (server will also cache into session)
+                const g = await generateQuestions(CURRENT_SESSION_ID, {
+                    company_name: companyName,
+                    job_title: jobTitle,
+                    job_description: jobDescription,
+                    interview_mode: interviewMode
+                });
+                hide('progressModal');
+                openTextModal();
+                // 3) Kick off conversation: prefer server /answer, fallback to generated list
+                let q = null;
+                try { q = await getNextQuestion(CURRENT_SESSION_ID); } catch(_) { q = null; }
+                if (q && q.ai && q.ai.next_question){
+                    appendChatMessage('ai', q.ai.next_question);
+                    CURRENT_Q_INDEX = Math.max(0, (q.ai.next_question_number || 1) - 1);
+                    CURRENT_TOTAL_QUESTIONS = q.ai.total_questions || CURRENT_TOTAL_QUESTIONS;
+                    updateQuestionCounter();
+                } else if (g && g.questions && g.questions.length){
+                    const first = (typeof g.questions[0] === 'string') ? g.questions[0] : (g.questions[0].text || 'Let’s begin. Tell me about yourself.');
+                    appendChatMessage('ai', first);
+                    CURRENT_Q_INDEX = 0;
+                    CURRENT_TOTAL_QUESTIONS = g.count || g.questions.length || CURRENT_TOTAL_QUESTIONS;
+                    updateQuestionCounter();
+                } else {
+                    appendChatMessage('ai', 'Your interview is ready. Please submit your first answer to begin.');
+                }
+            } catch (err){
+                hide('progressModal');
+                const m = document.getElementById('errorMessage');
+                if (m){ m.textContent = String(err.message || err); m.style.display = 'block'; }
+            }
+        });
+
+        // Submit answer button
+        document.getElementById('submitAnswer').addEventListener('click', async () => {
+            const box = document.getElementById('currentAnswer');
+            const answer = (box.value || '').trim();
+            // If empty, request the next question instead of doing nothing
+            if (!answer) {
+                try {
+                    const q = await getNextQuestion(CURRENT_SESSION_ID);
+                    if (q && q.ai && q.ai.next_question){
+                        appendChatMessage('ai', q.ai.next_question);
+                        CURRENT_Q_INDEX = Math.max(0, (q.ai.next_question_number || (CURRENT_Q_INDEX+1)) - 1);
+                        CURRENT_TOTAL_QUESTIONS = q.ai.total_questions || CURRENT_TOTAL_QUESTIONS;
+                        updateQuestionCounter();
+                    }
+                } catch(_) {}
+                return;
+            }
+            appendChatMessage('user', answer);
+            box.value = '';
+            try {
+                const resp = await submitAnswer(CURRENT_SESSION_ID, answer);
+                // Show AI response (feedback/guidance)
+                if (resp && resp.ai && resp.ai.response){
+                    appendChatMessage('ai', resp.ai.response);
+                }
+                // Then next question; if missing, fetch explicitly
+                if (resp && resp.ai && resp.ai.next_question){
+                    appendChatMessage('ai', resp.ai.next_question);
+                    CURRENT_Q_INDEX = Math.max(0, (resp.ai.next_question_number || (CURRENT_Q_INDEX+2)) - 1);
+                    CURRENT_TOTAL_QUESTIONS = resp.ai.total_questions || CURRENT_TOTAL_QUESTIONS;
+                    updateQuestionCounter();
+                } else {
+                    try {
+                        const q = await getNextQuestion(CURRENT_SESSION_ID);
+                        if (q && q.ai && q.ai.next_question){
+                            appendChatMessage('ai', q.ai.next_question);
+                            CURRENT_Q_INDEX = Math.max(0, (q.ai.next_question_number || (CURRENT_Q_INDEX+2)) - 1);
+                            CURRENT_TOTAL_QUESTIONS = q.ai.total_questions || CURRENT_TOTAL_QUESTIONS;
+                            updateQuestionCounter();
+                        }
+                    } catch(_) {}
+                }
+            } catch (err){
+                appendChatMessage('ai', 'There was an issue submitting the answer. Please try again.');
+            }
+        });
+
+        // Live character counter and Ctrl+Enter submit
+        (function(){
+            const box = document.getElementById('currentAnswer');
+            const counter = document.getElementById('charCount');
+            if (!box) return;
+            box.addEventListener('input', () => { if (counter) counter.textContent = `${box.value.length} characters`; });
+            box.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter'){
+                    e.preventDefault();
+                    document.getElementById('submitAnswer').click();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
+
+

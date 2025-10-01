@@ -1,0 +1,129 @@
+substitutions:
+  _BUCKET: "theiajobs.ai"   # production bucket - must match Cloud Build trigger
+  _BACKEND_URL: "https://theia-backend-v2-603965392227.us-central1.run.app"   # override in Cloud Build trigger
+
+steps:
+  # Simple static file deployment
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Deploy Static Files'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🚀 Starting static file deployment..."
+        
+        # Navigate to frontend directory
+        cd frontend/theia-frontend
+        
+        # Check structure
+        echo "📁 Frontend directory contents:"
+        ls -la
+        
+        # Use public directory as source
+        if [ ! -d "public" ]; then
+          echo "❌ Public directory not found"
+          exit 1
+        fi
+        
+        # Create deployment staging area
+        mkdir -p staging
+        
+        # Copy public files
+        echo "📂 Copying public files..."
+        cp -r public/* staging/
+        
+        # Create api-base.txt
+        echo "📝 Creating api-base.txt..."
+        echo "${_BACKEND_URL}" > staging/api-base.txt
+        
+        # Verify staging area
+        echo "📁 Staging area contents:"
+        ls -la staging/
+        
+        # AGGRESSIVE bucket cleaning to prevent old content
+        echo "🧹 AGGRESSIVELY cleaning bucket to prevent stale content..."
+        gsutil -m rm -rf "gs://${_BUCKET}/**" || true
+        gsutil -m rm -f "gs://${_BUCKET}/*" || true
+        
+        # Wait for deletion to propagate
+        echo "⏱️ Waiting for deletion to propagate..."
+        sleep 5
+        
+        # Verify bucket is empty
+        echo "🔍 Verifying bucket is clean..."
+        REMAINING_COUNT=$(gsutil ls "gs://${_BUCKET}/" 2>/dev/null | wc -l || echo "0")
+        if [ "$$REMAINING_COUNT" -gt 0 ]; then
+          echo "⚠️ Warning: $$REMAINING_COUNT files still in bucket"
+          gsutil ls "gs://${_BUCKET}/"
+        else
+          echo "✅ Bucket is completely clean"
+        fi
+        
+        # Deploy to bucket
+        echo "📤 Deploying to bucket..."
+        gsutil -m rsync -r staging "gs://${_BUCKET}" || {
+          echo "❌ Failed to deploy to bucket"
+          exit 1
+        }
+        
+        # Set cache headers
+        echo "⚙️ Setting cache headers..."
+        gsutil -m setmeta -h "Cache-Control:no-store, no-cache, must-revalidate" "gs://${_BUCKET}/*.html" || true
+        gsutil -m setmeta -h "Cache-Control:no-store, no-cache, must-revalidate" "gs://${_BUCKET}/api-base.txt" || true
+        gsutil -m setmeta -h "Cache-Control:public, max-age=31536000" "gs://${_BUCKET}/styles/**" || true
+        gsutil -m setmeta -h "Cache-Control:public, max-age=31536000" "gs://${_BUCKET}/public/**" || true
+        
+        # Configure website
+        echo "⚙️ Configuring website..."
+        gsutil web set -m index.html -e index.html "gs://${_BUCKET}" || {
+          echo "❌ Failed to configure website"
+          exit 1
+        }
+        
+        # Set public access
+        echo "🔒 Setting public access..."
+        gsutil iam ch allUsers:objectViewer "gs://${_BUCKET}" || {
+          echo "❌ Failed to set public access"
+          exit 1
+        }
+        
+        # VERIFY the correct content is deployed
+        echo "🔍 Verifying deployed content..."
+        
+        # Check if home.html has the correct Resume Builder text
+        echo "📋 Checking Resume Builder content..."
+        sleep 10  # Wait for deployment to propagate
+        
+        DEPLOYED_CONTENT=$$(gsutil cat "gs://${_BUCKET}/home.html" 2>/dev/null || echo "FILE_NOT_FOUND")
+        
+        if echo "$$DEPLOYED_CONTENT" | grep -q "Build an ATS-optimized resume tailored to your job description"; then
+          echo "✅ SUCCESS: Correct Resume Builder content is deployed"
+        elif echo "$$DEPLOYED_CONTENT" | grep -q "Coming soon.*resume.*AI guidance"; then
+          echo "❌ CRITICAL ERROR: Old 'Coming soon' content detected!"
+          echo "🔧 This indicates a caching issue or another deployment source"
+          echo "📝 Deployed content preview:"
+          echo "$$DEPLOYED_CONTENT" | grep -A2 -B2 "Resume Builder" || echo "Resume Builder section not found"
+          exit 1
+        else
+          echo "⚠️ Warning: Resume Builder content not found or unexpected format"
+          echo "📝 Content preview:"
+          echo "$$DEPLOYED_CONTENT" | head -20
+        fi
+        
+        # Verify other key content
+        echo "🔍 Verifying API base file..."
+        API_BASE_CONTENT=$$(gsutil cat "gs://${_BUCKET}/api-base.txt" 2>/dev/null || echo "FILE_NOT_FOUND")
+        if [ "$$API_BASE_CONTENT" = "${_BACKEND_URL}" ]; then
+          echo "✅ API base file is correct: $$API_BASE_CONTENT"
+        else
+          echo "❌ API base file is incorrect: $$API_BASE_CONTENT"
+        fi
+        
+        echo "✅ Deployment completed successfully!"
+        echo "🌐 Website should be accessible via Google Cloud Storage"
+        echo "🔗 Direct URL: https://storage.googleapis.com/${_BUCKET}/index.html"
+        echo "🏠 Home page: https://storage.googleapis.com/${_BUCKET}/home.html"
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+

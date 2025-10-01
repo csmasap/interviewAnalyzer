@@ -1,0 +1,84 @@
+substitutions:
+  _BUCKET: "theia-frontend-yourbucket"   # override in Cloud Build trigger
+  _BACKEND_URL: "https://theia-backend-v2-603965392227.us-central1.run.app"   # override in Cloud Build trigger
+
+steps:
+  # Prepare and deploy static files
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Deploy Static Frontend'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        echo "🚀 Starting static frontend deployment..."
+        
+        # Check workspace structure
+        echo "📁 Workspace contents:"
+        ls -la
+        
+        # Navigate to frontend directory
+        cd frontend/theia-frontend
+        
+        # Check frontend structure
+        echo "📁 Frontend contents:"
+        ls -la
+        
+        # Create deployment directory
+        echo "📂 Creating deployment directory..."
+        mkdir -p deploy
+        
+        # Create api-base.txt
+        echo "📝 Creating api-base.txt..."
+        echo "${_BACKEND_URL}" > deploy/api-base.txt
+        
+        # Copy all public files
+        echo "📂 Copying public files..."
+        if [ -d "public" ]; then
+          cp -r public/* deploy/
+        else
+          echo "❌ Public directory not found"
+          exit 1
+        fi
+        
+        # Verify deployment directory
+        echo "📁 Deployment directory contents:"
+        ls -la deploy/
+        
+        # Clean bucket
+        echo "🧹 Cleaning bucket..."
+        gsutil -m rm -rf "gs://${_BUCKET}/**" || true
+        gsutil -m rm -f "gs://${_BUCKET}/*" || true
+        
+        # Deploy to bucket
+        echo "📤 Deploying to bucket..."
+        gsutil -m rsync -r deploy "gs://${_BUCKET}" || {
+          echo "❌ Failed to deploy to bucket"
+          exit 1
+        }
+        
+        # Set cache headers
+        echo "⚙️ Setting cache headers..."
+        gsutil -m setmeta -h "Cache-Control:no-store, no-cache, must-revalidate" "gs://${_BUCKET}/*.html" || true
+        gsutil -m setmeta -h "Cache-Control:no-store, no-cache, must-revalidate" "gs://${_BUCKET}/api-base.txt" || true
+        gsutil -m setmeta -h "Cache-Control:public, max-age=31536000" "gs://${_BUCKET}/styles/**" || true
+        gsutil -m setmeta -h "Cache-Control:public, max-age=31536000" "gs://${_BUCKET}/public/**" || true
+        
+        # Configure website
+        echo "⚙️ Configuring website..."
+        gsutil web set -m index.html -e index.html "gs://${_BUCKET}" || {
+          echo "❌ Failed to configure website"
+          exit 1
+        }
+        
+        # Set public access
+        echo "🔒 Setting public access..."
+        gsutil iam ch allUsers:objectViewer "gs://${_BUCKET}" || {
+          echo "❌ Failed to set public access"
+          exit 1
+        }
+        
+        echo "✅ Deployment completed successfully!"
+        echo "🌐 Website URL: https://storage.googleapis.com/${_BUCKET}/index.html"
+
+options:
+  logging: CLOUD_LOGGING_ONLY

@@ -1,0 +1,41 @@
+substitutions:
+  _SERVICE_NAME: "theia-job-seekers"
+  _REGION: "us-central1"
+
+steps:
+  # Build container image using Docker from repo root, using external Dockerfile
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Build Container Image'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/theia-backend:latest'
+      - '-f'
+      - 'external/THEIA-Job-Seekers/Dockerfile'
+      - '.'
+
+  # Push image to Container Registry  
+  - name: 'gcr.io/cloud-builders/docker'
+    id: 'Push to Registry'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/theia-backend:latest'
+
+  # Deploy to Cloud Run
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Deploy to Cloud Run'
+    args:
+      - 'run'
+      - 'deploy'
+      - '$_SERVICE_NAME'
+      - '--image=gcr.io/$PROJECT_ID/theia-backend:latest'
+      - '--platform=managed'
+      - '--region=$_REGION'
+      - '--allow-unauthenticated'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--timeout=3600'
+      - '--max-instances=10'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

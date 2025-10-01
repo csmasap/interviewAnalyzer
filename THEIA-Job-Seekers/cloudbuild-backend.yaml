@@ -1,0 +1,38 @@
+substitutions:
+  _SERVICE_NAME: "theia-job-seekers"
+  _REGION: "us-central1"
+
+steps:
+  # Prepare source: copy root requirements.txt into app folder expected by buildpacks
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Prepare Source Requirements'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        if [ -f requirements.txt ]; then
+          cp requirements.txt external/THEIA-Job-Seekers/requirements.txt
+        fi
+
+  # Build and deploy to Cloud Run from the external app directory
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Deploy Backend to Cloud Run'
+    args:
+      - 'run'
+      - 'deploy'
+      - '$_SERVICE_NAME'
+      - '--source=external/THEIA-Job-Seekers'
+      - '--platform=managed'
+      - '--region=$_REGION'
+      - '--allow-unauthenticated'
+      - '--memory=2Gi'
+      - '--cpu=2'
+      - '--concurrency=100'
+      - '--max-instances=10'
+      - '--timeout=3600'
+      - '--set-env-vars=PORT=8080'
+      - '--service-account=theia-job-seekers@appspot.gserviceaccount.com'
+
+options:
+  logging: CLOUD_LOGGING_ONLY

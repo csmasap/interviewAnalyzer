@@ -1,0 +1,44 @@
+---
+description: |
+  Update React Source Files (when used) - Always modify source files in src/ directory instead of build/dist files to prevent circular build errors and ensure changes persist through rebuilds. When fixing React components, styles, or functionality, target the original source files rather than compiled output.
+globs:
+  - "**/{src,source}/**/*.{js,jsx,ts,tsx,css,scss,sass,less}"
+  - "**/package.json"
+  - "**/tsconfig.json"
+  - "**/webpack.config.js"
+  - "**/*.config.{js,ts}"
+alwaysApply: true
+---
+
+## React Source File Update Rule
+
+### Purpose
+Prevent circular build errors by ensuring all React-related changes are made to source files rather than build artifacts.
+
+### Key Principles
+1. **Always target source files**: When modifying React components, styles, or configuration, edit files in `src/`, `source/`, or similar source directories
+2. **Avoid build artifacts**: Never edit files in `build/`, `dist/`, `public/static/`, or other compiled output directories
+3. **Preserve build integrity**: Changes to source files will be reflected in the build process, maintaining consistency
+4. **Configuration priority**: Update configuration files (package.json, tsconfig.json, webpack.config.js) in their source locations
+
+### When to Apply
+- Fixing React component bugs or adding features
+- Updating CSS/styling in React applications  
+- Modifying TypeScript/JavaScript logic
+- Changing build configurations
+- Adding or updating dependencies
+- Resolving import/export issues
+
+### File Targeting Strategy
+- ✅ Edit: `src/components/MyComponent.tsx`
+- ❌ Avoid: `build/static/js/MyComponent.js`
+- ✅ Edit: `src/styles/theme.css`
+- ❌ Avoid: `build/static/css/main.css`
+- ✅ Edit: `package.json` (root)
+- ❌ Avoid: `build/package.json`
+
+### Build Process Considerations
+- After source changes, trigger appropriate build commands (`npm run build`, `yarn build`)
+- Ensure development server restarts to reflect changes (`npm start`, `yarn start`)
+- Verify changes appear in both development and production builds
+- Clear build cache if changes don't appear (`rm -rf build/ && npm run build`)

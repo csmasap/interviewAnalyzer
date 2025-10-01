@@ -1,0 +1,5 @@
+/* Minimal React base styles - theme.css handles all main styling */
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}

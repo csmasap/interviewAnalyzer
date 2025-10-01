@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>THEIA • Home</title>
+  <link rel="icon" href="THEIA-logo-gold.png" type="image/png">
+  <link rel="shortcut icon" href="THEIA-logo-gold.png" type="image/png">
+  <link rel="apple-touch-icon" href="THEIA-logo-gold.png">
+  <link rel="stylesheet" href="styles/theme.css">
+  <style>
+    .menu-button { background: transparent; border: none; color: #fff; font-size: 24px; cursor: pointer; }
+    .menu-panel { position: absolute; top: 60px; right: 16px; background: #fff; border: 1px solid var(--gray-200); border-radius: 10px; box-shadow: var(--shadow-lg); width: 220px; display: none; }
+    .menu-panel.open { display: block; }
+    .menu-item { display:block; padding:12px 14px; color: var(--gray-900); text-decoration:none; border-bottom:1px solid var(--gray-100); }
+    .menu-item:last-child { border-bottom: none; }
+    .menu-item:hover { background:#FFF7ED; color: var(--orange-600); }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner" style="position:relative;">
+      <a href="home.html"><img src="public/THEIA-logo.png" alt="THEIA logo" class="brand-logo"></a>
+      <div class="brand-center">
+        <div class="brand__title">THEIA</div>
+        <div class="brand__subtitle">Show your value. Get the job</div>
+      </div>
+      <button id="burger" class="menu-button" aria-label="Menu">☰</button>
+      <nav id="menu" class="menu-panel" aria-label="Main Menu">
+        <a class="menu-item" href="interview.html">Mock/Prep Interview</a>
+        <a class="menu-item" href="resume.html">Resume Builder</a>
+        <a class="menu-item" href="my-skills.html">My Skills</a>
+        <a class="menu-item" href="job-finder.html">Job Finder</a>
+      </nav>
+    </div>
+  </header>
+
+  <main style="max-width:1100px; margin: var(--header-content-spacing) auto var(--space-8); padding: 0 var(--space-4);">
+    <section class="header" style="margin-bottom: var(--space-6);">
+      <h1>ISA is here to assist you!</h1>
+      <p>Your Interview Smart Agent is designed to help you showcase your real professional value and potential so you get your dream job.</p>
+      <p><strong>Together we can:</strong></p>
+    </section>
+
+    <section class="cards">
+      <a class="card-link" href="interview.html">
+        <div class="card-modern">
+          <div class="card-icon">🎤</div>
+          <h3 class="card-title">Mock/Prep Interview</h3>
+          <p class="card-desc">Practice interviews tailored to your resume and the role with ISA guiding you.</p>
+          <div class="card-cta">Start practicing →</div>
+        </div>
+      </a>
+
+      <a class="card-link" href="job-finder.html">
+        <div class="card-modern">
+          <div class="card-icon">🔎</div>
+          <h3 class="card-title">Job Finder</h3>
+          <p class="card-desc">Discover roles that match your skills and interests using your ISA profile.</p>
+          <div class="card-cta">Find jobs →</div>
+        </div>
+      </a>
+
+      <a class="card-link" href="resume.html">
+        <div class="card-modern">
+          <div class="card-icon">📄</div>
+          <h3 class="card-title">Resume Builder</h3>
+          <p class="card-desc">Build an ATS‑optimized resume tailored to your job description in minutes.</p>
+          <div class="card-cta">Build my resume →</div>
+        </div>
+      </a>
+
+      <a class="card-link" href="my-skills.html">
+        <div class="card-modern">
+          <div class="card-icon">📊</div>
+          <h3 class="card-title">My Skills</h3>
+          <p class="card-desc">Track, evidence, and improve your core skills with clear, visual insights.</p>
+          <div class="card-cta">View skills →</div>
+        </div>
+      </a>
+    </section>
+  </main>
+
+  <script>
+    (function(){
+      const btn = document.getElementById('burger');
+      const menu = document.getElementById('menu');
+      btn.addEventListener('click', () => {
+        menu.classList.toggle('open');
+      });
+      // Close menu on outside click
+      document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && e.target !== btn) {
+          menu.classList.remove('open');
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
+
+
